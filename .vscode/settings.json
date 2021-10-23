@@ -1,0 +1,34 @@
+{
+    "C_Cpp.default.includePath": [
+        "{workspaceFolder}/project/Core/Inc",
+        "{workspaceFolder}/project/LWIP/App",
+        "{workspaceFolder}/project/LWIP/Target",
+        "{workspaceFolder}/project/LWIP/Target",
+        "{workspaceFolder}/project/UserFIles/include",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Middlewares/Third_Party/LwIP/src/include",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Middlewares/Third_Party/LwIP/system",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Drivers/STM32F4xx_HAL_Driver/Inc",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Middlewares/Third_Party/FreeRTOS/Source/include",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Middlewares/Third_Party/LwIP/src/include/netif/ppp",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Drivers/CMSIS/Device/ST/STM32F4xx/Include",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Middlewares/Third_Party/LwIP/src/include/lwip",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Middlewares/Third_Party/LwIP/src/include/lwip/apps",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Middlewares/Third_Party/LwIP/src/include/lwip/priv",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Middlewares/Third_Party/LwIP/src/include/lwip/prot",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Middlewares/Third_Party/LwIP/src/include/netif",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Middlewares/Third_Party/LwIP/src/include/compat/posix",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Middlewares/Third_Party/LwIP/src/include/compat/posix/arpa",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Middlewares/Third_Party/LwIP/src/include/compat/posix/net",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Middlewares/Third_Party/LwIP/src/include/compat/posix/sys",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Middlewares/Third_Party/LwIP/src/include/compat/stdc",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Middlewares/Third_Party/LwIP/system/arch",
+        "C:/Users/49997/STM32Cube/Repository/STM32Cube_FW_F4_V1.26.1/Drivers/CMSIS/Include"
+    ],
+    "files.associations": {
+        "main.h": "c",
+        "usertask.h": "c"
+    }
+}
