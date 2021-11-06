@@ -21,13 +21,15 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "adc.h"
+#include "dac.h"
 #include "dma.h"
 #include "tim.h"
 #include "gpio.h"
+#include "fsmc.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "userinit.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -78,7 +80,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -93,10 +94,13 @@ int main(void)
   MX_DMA_Init();
   MX_ADC1_Init();
   MX_TIM2_Init();
+  MX_DAC_Init();
+  MX_TIM7_Init();
+  MX_FSMC_Init();
   /* USER CODE BEGIN 2 */
   
   //User costomized initiation here.
-  
+  userinit();
 	
   /* USER CODE END 2 */
 
@@ -164,7 +168,20 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+uint32_t t=0;
+uint32_t p=0;
+uint32_t out_val = 0;
 
+float get_t_sin(void)
+{
+	++t;
+	if(t > 3000)
+	{
+		p = osKernelSysTick() % 300;
+		t = 0;
+	}
+	return (t+p)/300.0f * 3.14159f;
+}
 /* USER CODE END 4 */
 
  /**
@@ -184,7 +201,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-
+	if(htim == &htim7)
+	{
+		float f = get_t_sin();
+		float sf = sinf( f );
+		out_val = ( 2000.0f + 1500.0f * sf );
+		
+		HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, out_val);
+		HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
+	}
   /* USER CODE END Callback 1 */
 }
 

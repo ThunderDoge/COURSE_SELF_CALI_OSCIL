@@ -13,5 +13,6 @@
 
 void userinit(void)
 {
-    
+	TFTLCD_Init();
 }
+

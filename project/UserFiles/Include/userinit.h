@@ -10,5 +10,10 @@
  */
 
 #include "main.h"
+#include "tim.h"
+#include "cmsis_os.h"
+#include "math.h"
+#include "dac.h"
+#include "ILI93xx.h"
 
 void userinit(void);

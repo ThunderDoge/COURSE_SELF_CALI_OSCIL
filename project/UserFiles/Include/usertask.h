@@ -12,11 +12,16 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "adc.h"
+#include "dac.h"
 #include "dma.h"
-#include "lwip.h"
 #include "tim.h"
 #include "gpio.h"
 #include "cmsis_os.h"
+#include "ILI93xx.h"
+
+#define _USE_MATH_DEFINES
+
+#include "math.h"
 
 typedef struct
 {
