@@ -13,6 +13,7 @@
 
 void userinit(void)
 {
+	// Init LCD screen.
 	TFTLCD_Init();
 }
 

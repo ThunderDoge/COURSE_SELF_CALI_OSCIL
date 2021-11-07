@@ -15,5 +15,7 @@
 #include "math.h"
 #include "dac.h"
 #include "ILI93xx.h"
+#include "lwip.h"
+#include "app_ethernet.h"
 
 void userinit(void);

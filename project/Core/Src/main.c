@@ -23,12 +23,15 @@
 #include "adc.h"
 #include "dac.h"
 #include "dma.h"
+#include "lwip.h"
 #include "tim.h"
 #include "gpio.h"
 #include "fsmc.h"
+#include "SEGGER_SYSVIEW.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "app_ethernet.h"
 #include "userinit.h"
 /* USER CODE END Includes */
 
@@ -101,6 +104,7 @@ int main(void)
   
   //User costomized initiation here.
   userinit();
+  SEGGER_SYSVIEW_Conf();            /* Configure and initialize */
 	
   /* USER CODE END 2 */
 
