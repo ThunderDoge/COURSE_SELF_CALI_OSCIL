@@ -18,29 +18,12 @@
 #include "gpio.h"
 #include "cmsis_os.h"
 #include "ILI93xx.h"
+#include "gui.h"
 
 #define _USE_MATH_DEFINES
 
 #include "math.h"
 
-typedef struct
-{
-    float vertical_scale_factor;
-    float horizontal_scale_factor;
-
-    float maximum;
-    float minimum;
-    float RmS;
-    float freq;
-}WaveformStats;
-
-typedef struct
-{
-    float gain;
-    float offset;
-}AdcOffsetSheet;
-
-extern WaveformStats Wave1;
-extern AdcOffsetSheet OffsetConf1;
+#include "adc_control.h"
 
 

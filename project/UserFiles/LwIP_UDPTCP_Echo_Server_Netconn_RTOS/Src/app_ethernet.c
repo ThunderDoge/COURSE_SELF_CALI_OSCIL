@@ -16,6 +16,7 @@
   *
   ******************************************************************************
   */
+#ifndef UNUSE_LWIP
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "lwip/dhcp.h"
@@ -126,5 +127,7 @@ void DHCP_thread(void const * argument)
   }
 }
 #endif  /* USE_DHCP */
+
+#endif
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

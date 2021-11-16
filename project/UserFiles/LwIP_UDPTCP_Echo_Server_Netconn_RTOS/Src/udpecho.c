@@ -30,6 +30,7 @@
  *
  */
 
+#ifndef UNUSE_LWIP
 
 #include "lwip/opt.h"
 
@@ -86,3 +87,5 @@ void udpecho_init(void)
 }
 
 #endif /* LWIP_NETCONN */
+
+#endif // UNUSE_LWIP

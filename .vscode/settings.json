@@ -29,7 +29,10 @@
     ],
     "files.associations": {
         "main.h": "c",
-        "usertask.h": "c"
+        "usertask.h": "c",
+        "font.h": "c",
+        "adc_control.h": "c",
+        "stm32f4xx_hal.h": "c"
     },
     "git.ignoreLimitWarning": true
 }

@@ -30,16 +30,6 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 
-#include "stm32f4xx_ll_rcc.h"
-#include "stm32f4xx_ll_bus.h"
-#include "stm32f4xx_ll_system.h"
-#include "stm32f4xx_ll_exti.h"
-#include "stm32f4xx_ll_cortex.h"
-#include "stm32f4xx_ll_utils.h"
-#include "stm32f4xx_ll_pwr.h"
-#include "stm32f4xx_ll_dma.h"
-#include "stm32f4xx_ll_gpio.h"
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -68,19 +58,27 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define PORT_FREQ_Pin LL_GPIO_PIN_6
+#define KEY_0_Pin GPIO_PIN_2
+#define KEY_0_GPIO_Port GPIOE
+#define KEY_1_Pin GPIO_PIN_3
+#define KEY_1_GPIO_Port GPIOE
+#define KEY2_Pin GPIO_PIN_4
+#define KEY2_GPIO_Port GPIOE
+#define PORT_FREQ_Pin GPIO_PIN_6
 #define PORT_FREQ_GPIO_Port GPIOE
-#define LED_Pin LL_GPIO_PIN_9
+#define LED_Pin GPIO_PIN_9
 #define LED_GPIO_Port GPIOF
-#define PORT_DAC_Pin LL_GPIO_PIN_4
+#define KEY_WK_Pin GPIO_PIN_0
+#define KEY_WK_GPIO_Port GPIOA
+#define PORT_DAC_Pin GPIO_PIN_4
 #define PORT_DAC_GPIO_Port GPIOA
-#define PORT_ADC_Pin LL_GPIO_PIN_6
+#define PORT_ADC_Pin GPIO_PIN_6
 #define PORT_ADC_GPIO_Port GPIOA
-#define PORT_GAIN_A_Pin LL_GPIO_PIN_6
+#define PORT_GAIN_A_Pin GPIO_PIN_6
 #define PORT_GAIN_A_GPIO_Port GPIOD
-#define PORT_GAIN_B_Pin LL_GPIO_PIN_7
+#define PORT_GAIN_B_Pin GPIO_PIN_7
 #define PORT_GAIN_B_GPIO_Port GPIOD
-#define PORT_TRIG_Pin LL_GPIO_PIN_15
+#define PORT_TRIG_Pin GPIO_PIN_15
 #define PORT_TRIG_GPIO_Port GPIOG
 /* USER CODE BEGIN Private defines */
 
