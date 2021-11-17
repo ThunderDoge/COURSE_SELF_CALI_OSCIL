@@ -40,10 +40,45 @@ void LcdTest(void)
         num = (num + 1 > r ? num : num + 1); \
     }
 
-void LcdDisplayParamOnce(void)
+/**
+  * @brief  Data display at head of screen.
+  * @details  
+  * @param[in]  
+  * @retval  
+  */
+void LcdDisplayParam(void)
 {
     LCD_Fill(30, 0, 300, 300, GREEN);
-    LCD_ShowString(30, 30, 200, 16, 16, "WAVE STATUS");
+    LCD_ShowString(30, 30, 200, 24, 24, "WAVE STATUS");
+    LCD_ShowString(30, 60, 200, 16, 16, "MAX = ");
+    LCD_ShowString(30, 80, 200, 16, 16, "MIN = ");
+    LCD_ShowString(30, 100, 200, 16, 16, "RMS = ");
+    LCD_ShowString(30, 120, 200, 16, 16, "AVG = ");
+    LCD_ShowString(30, 140, 200, 16, 16, "FREQ = ");
+
+    char max[30];
+    char min[30];
+    char rms[30];
+    char avg[30];
+    char freq[30];
+
+    while (1)
+    {
+        sprintf(max,    "%+#10.4f",    GlobalWave.maximum);
+        sprintf(min,    "%+#10.4f",    GlobalWave.minimum);
+        sprintf(rms,    "%+#10.4f",    GlobalWave.RmS);
+        sprintf(avg,    "%+#10.4f",    GlobalWave.average);
+        sprintf(freq,   "%+#10.4f",    GlobalWave.freq);
+
+        LCD_ShowString(150, 60,  200, 16, 16,    max );
+        LCD_ShowString(150, 80,  200, 16, 16,    min );
+        LCD_ShowString(150, 100, 200, 16, 16,    rms );
+        LCD_ShowString(150, 120, 200, 16, 16,    avg );
+        LCD_ShowString(150, 140, 200, 16, 16,    freq );
+        osDelay(5);
+    }
+    
+
 }
 
 void LcdVertical(void)
@@ -85,7 +120,7 @@ void LcdVertical(void)
             LCD_Fill(150, 380, 350, 400, GREEN); // Clear selection line.
             break;
         case KEY_1_PRES:
-            ConfigGain(selection_number);
+            ConfigGain(selection_number - 1);
             LCD_ShowString(150, 400, 200, 16, 16, "APPLYED");
             break;
         case KEY_2_PRES:
@@ -164,7 +199,7 @@ void LcdHorizontal(void)
             LCD_Fill(150, 380, 350, 400, GREEN); // Clear selection line.
             break;
         case KEY_1_PRES:
-            ConfigFreqDiv(selection_number);
+            ConfigFreqDiv(selection_number -1);
             LCD_ShowString(150, 400, 200, 16, 16, "APPLYED");
             break;
         case KEY_2_PRES:
@@ -414,13 +449,3 @@ void LcdMenu(void)
     }
 }
 
-/**
-  * @brief  Data display at head of screen.
-  * @details  
-  * @param[in]  
-  * @retval  
-  */
-void LcdData(void)
-{
-
-}

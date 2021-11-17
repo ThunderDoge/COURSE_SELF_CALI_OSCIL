@@ -11,7 +11,7 @@
 
 #include "usertask.h"
 
-
+WaveformStats TempWave;
 
 /**
 * @brief Function implementing the ADCHandleTask thread.
@@ -25,8 +25,13 @@ void ADCHandleTaskFunction(void const *argument)
     uint32_t tick = osKernelSysTick();
 
     // Initiate Statistic structures. ------------
+    InitializeWaveformSlidingBuffer(&wave_buffer);
 
     // init as 1MHz / 1000 = 10kHz sampling freq.
+
+    ConfigFreqDiv(f10kSaps);
+    ConfigGain(Gain_10x);
+
     Start_TIM_tiggered_ADC_DMA();
 
     for (;;)
@@ -39,24 +44,38 @@ void ADCHandleTaskFunction(void const *argument)
                 // Change the sampling freq and do again.
                 Start_TIM_tiggered_ADC_DMA();
 
-
                 // do 1 time Data_Get-Analyse loop
+                if (i == 0)
+                    RegularMeasure(adc_buffer_0, ADC_BUFFER_SIZE, &GlobalConf, &TempWave);
+                else
+                    RegularMeasure(adc_buffer_1, ADC_BUFFER_SIZE, &GlobalConf, &TempWave);
+
+                if(FeedRegularSlidingBuffer(&TempWave, &wave_buffer))
+                {
+                    GetRegularSlidingOutput(&GlobalWave, &wave_buffer);
+                }
 
                 flag_adc_buffer_processing[i] = 0;
                 flag_adc_buffer_ready[i] = 0;
                 // Every 5ms :
-                if (osKernelSysTick() - tick > 5U)
-                {
-                    // Enter Task switching
-                    osDelayUntil(&tick, 1U);
-                }
             }
-            
+            else if(!flag_adc_sampling)
+            {
+                Start_TIM_tiggered_ADC_DMA();
+            }
         }
-        
+        osDelayUntil(&tick, 1U);
     }
 }
 
+void UI2ndDataDisplayTaskFunction(void const *argument)
+{
+    while (1)
+    {
+        LcdDisplayParam();
+        osDelay(10);
+    }
+}
 
 /**
 * @brief Function implementing the UIHandleTask thread.
@@ -65,12 +84,15 @@ void ADCHandleTaskFunction(void const *argument)
 */
 void UIHandleTaskFunction(void const *argument)
 {
-	LcdTest();    
-	osDelay(500);
-	/* USER CODE BEGIN WHILE */
+    LcdTest();
+    osDelay(500);
+    /* USER CODE BEGIN WHILE */
+     
+    osThreadDef(UI2ndDataDisplayTask, UI2ndDataDisplayTaskFunction, osPriorityHigh, 0, 512);
+    osThreadCreate(osThread(UI2ndDataDisplayTask), NULL);
     while (1)
     {
-		LcdMenu();
+        LcdMenu();
         osDelay(10);
     }
 }
@@ -105,4 +127,3 @@ void DACHandleTaskFunction(void const *argument)
         osDelay(1);
     }
 }
-
