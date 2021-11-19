@@ -119,6 +119,7 @@ typedef struct ct
 
 // Global variables.
 extern WaveformStats GlobalWave; 
+extern WaveformStats TempWave;
 extern WaveMeasureConfig_t GlobalConf;
 
 extern WaveformSlidingBuffer wave_buffer;
@@ -126,6 +127,7 @@ extern WaveformSlidingBuffer wave_buffer;
 extern uint8_t flag_adc_buffer_ready[2];
 extern uint8_t flag_adc_buffer_processing[2];
 extern uint8_t flag_adc_sampling;
+extern uint8_t flag_in_calibration;
 
 
 extern uint16_t adc_buffer_0[ADC_BUFFER_SIZE];
@@ -134,11 +136,18 @@ extern uint16_t adc_buffer_1[ADC_BUFFER_SIZE];
 // Save/Load your configurations with Flash-on-Chip
 int SaveMeasureConfig(WaveMeasureConfig_t* conf);
 int LoadMeasureConfig(WaveMeasureConfig_t* conf);
+typedef enum clt
+{
+    CaliNone,
+    CaliGain,
+    CaliBias
+}CaliType;
 
 // Calibration
-int RequestCalibration(GainLevel_t gain_lvl, uint32_t times, CalibrationTickit* tickit);
-int FeedCalibration(uint16_t* buffer, CalibrationTickit* tickit);
-int GetCalibration(CalibrationTickit* tickit);
+int RequestCalibration(GainLevel_t gain_lvl, CaliType type);
+int FeedCalibration(WaveformStats * wave, WaveformSlidingBuffer * buffer);
+int GetCalibration(void);
+void ResetCalibration(void);
 
 void InitializeWaveformSlidingBuffer(WaveformSlidingBuffer* buffer);
 

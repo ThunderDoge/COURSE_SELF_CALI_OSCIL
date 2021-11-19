@@ -55,12 +55,14 @@ void LcdDisplayParam(void)
     LCD_ShowString(30, 100, 200, 16, 16, "RMS = ");
     LCD_ShowString(30, 120, 200, 16, 16, "AVG = ");
     LCD_ShowString(30, 140, 200, 16, 16, "FREQ = ");
+    LCD_ShowString(30, 160, 200, 16, 16, "IN CALI ");
 
     char max[30];
     char min[30];
     char rms[30];
     char avg[30];
     char freq[30];
+    char cali[30];
 
     while (1)
     {
@@ -69,13 +71,21 @@ void LcdDisplayParam(void)
         sprintf(rms,    "%+#10.4f",    GlobalWave.RmS);
         sprintf(avg,    "%+#10.4f",    GlobalWave.average);
         sprintf(freq,   "%+#10.4f",    GlobalWave.freq);
-
+        if(flag_in_calibration)
+            sprintf(cali, "YES      ");
+        else
+            sprintf(cali, "NO       ");
+        
+        taskENTER_CRITICAL();
         LCD_ShowString(150, 60,  200, 16, 16,    max );
         LCD_ShowString(150, 80,  200, 16, 16,    min );
         LCD_ShowString(150, 100, 200, 16, 16,    rms );
         LCD_ShowString(150, 120, 200, 16, 16,    avg );
         LCD_ShowString(150, 140, 200, 16, 16,    freq );
-        osDelay(5);
+        LCD_ShowString(150, 160, 200, 16, 16,    cali );
+
+        taskEXIT_CRITICAL();
+        osDelay(10);
     }
     
 
@@ -245,7 +255,7 @@ void LcdCalibrationDC(void)
 
         case KEY_1_PRES:
             // ------------------------------------------------------ APPLY YOUR CONFIG HERE
-
+            RequestCalibration(GlobalConf.gain_level, CaliBias);
             LCD_ShowString(150, 400, 200, 16, 16, "REQUESTED");
             break;
         case KEY_UP_PRES:
@@ -279,7 +289,7 @@ void LcdCalibrationGain(void)
 
         case KEY_1_PRES:
             // ------------------------------------------------------ APPLY YOUR CONFIG HERE
-
+            RequestCalibration(GlobalConf.gain_level, CaliGain);
             LCD_ShowString(150, 400, 200, 16, 16, "REQUESTED");
             break;
         case KEY_UP_PRES:

@@ -7,6 +7,7 @@ uint32_t buffer_blocked_count = 0;
 
 // Global config & statistic storage.
 WaveformStats GlobalWave;
+WaveformStats TempWave;
 WaveMeasureConfig_t GlobalConf;
 
 WaveformSlidingBuffer wave_buffer;
@@ -160,7 +161,7 @@ void ConfigGain(GainLevel_t selection_number)
     HAL_GPIO_WritePin(PORT_GAIN_A_GPIO_Port, PORT_GAIN_A_Pin, ((selection_number & 0x1) ? GPIO_PIN_SET : GPIO_PIN_RESET));
     HAL_GPIO_WritePin(PORT_GAIN_B_GPIO_Port, PORT_GAIN_B_Pin, ((selection_number & 0x2) ? GPIO_PIN_SET : GPIO_PIN_RESET));
     GlobalConf.gain_level = (GainLevel_t)selection_number;
-    InitializeWaveformStats(&wave_buffer.output);
+    InitializeWaveformSlidingBuffer(&wave_buffer);
 }
 
 /**
@@ -172,8 +173,8 @@ void ConfigGain(GainLevel_t selection_number)
 void ConfigFreqDiv(SampFreqLvl_t selection_number)
 {
     GlobalConf.sampling_freq = (SampFreqLvl_t)selection_number;
-    InitializeWaveformStats(&wave_buffer.output);
-
+    InitializeWaveformSlidingBuffer(&wave_buffer);
+    
     uint16_t n = SampFreqLvlToDivNumber[selection_number];
 
     __HAL_TIM_SET_AUTORELOAD(&TRIGGER_TIM, n);
@@ -303,67 +304,35 @@ void WaveformDataAnalyze(uint16_t *pbuffer, uint32_t buf_length, WaveformStats *
 
     // count of trigger-volt crossing.
     // and record FIRST & LAST crossing index.
-    // if (is_cnt_risedge)
-    // {
-    //     if (pbuffer[i] <= trig_voltage && pbuffer[i + 1] > trig_voltage) // detect risedge
-    //     {
-    //         cnt_of_risedge++;
-    //         if (first_edging_index == -1)
-    //         {
-    //             first_edging_index = i;
-    //         }
-
-    //         last_edging_index = i;
-    //     }
-    // }
-    // else
-    // {
-    //     if (pbuffer[i] >= trig_voltage && pbuffer[i + 1] < trig_voltage) // detect falledge
-    //     {
-    //         cnt_of_risedge++;
-    //         // record edging index
-    //         if (first_edging_index == -1)
-    //         {
-    //             first_edging_index = i;
-    //         }
-
-    //         last_edging_index = i;
-    //     }
-    // }
-
     for (uint32_t i = 3; i < buf_length - 1; i++) // left off: pbuffer[buf_length-1], the last data point.
     {
 
-        if (pbuffer[i] <= trig_voltage && pbuffer[i + 1] > trig_voltage) // detect risedge
+        if (is_cnt_risedge)
         {
-            if (is_cnt_risedge)
+            if (pbuffer[i] <= trig_voltage && pbuffer[i + 1] > trig_voltage) // detect risedge
             {
                 cnt_of_risedge++;
-            }
+                if (first_edging_index == -1)
+                {
+                    first_edging_index = i;
+                }
 
-            // record edging index
-            if (first_edging_index == -1)
-            {
-                first_edging_index = i;
+                last_edging_index = i;
             }
-
-            last_edging_index = i;
         }
-
-        if (pbuffer[i] >= trig_voltage && pbuffer[i + 1] < trig_voltage) // detect falledge
+        else
         {
-            if (!is_cnt_risedge)
+            if (pbuffer[i] >= trig_voltage && pbuffer[i + 1] < trig_voltage) // detect falledge
             {
                 cnt_of_risedge++;
-            }
+                // record edging index
+                if (first_edging_index == -1)
+                {
+                    first_edging_index = i;
+                }
 
-            // record edging index
-            if (first_edging_index == -1)
-            {
-                first_edging_index = i;
+                last_edging_index = i;
             }
-
-            last_edging_index = i;
         }
     }
 
@@ -484,7 +453,7 @@ int RegularMeasure(uint16_t *buffer, uint32_t buf_length, WaveMeasureConfig_t *c
  * @details  
  * @param[in]  wave the wave to feed (addr).
  * @param[in]  buffer the buffer addr.
- * @retval  
+ * @retval  0: not filled. 1:filled.
  */
 int FeedRegularSlidingBuffer(WaveformStats *wave, WaveformSlidingBuffer *buffer)
 {
@@ -523,6 +492,13 @@ int FeedRegularSlidingBuffer(WaveformStats *wave, WaveformSlidingBuffer *buffer)
     return retval;
 }
 
+/**
+ * @brief  Get output of that sliding buffer
+ * @details  Notice that output shall div by WAVE_SLIDE_LENGTH
+ * @param[in]  wave where to write to
+ * @param[in]  buffer the sliding buffer
+ * @retval  
+ */
 void GetRegularSlidingOutput(WaveformStats *wave, WaveformSlidingBuffer *buffer)
 {
     wave->maximum = buffer->output.maximum / WAVE_SLIDE_LENGTH;
@@ -537,4 +513,94 @@ void InitializeWaveformSlidingBuffer(WaveformSlidingBuffer *buffer)
 {
     buffer->queue_count = 0;
     buffer->next_position = 0;
+    InitializeWaveformStats(&(buffer->output));
 }
+
+uint8_t flag_in_calibration=0;
+CaliType global_cali_type = CaliNone;
+/**
+ * @brief  Request a new calibration.
+ * @details  
+ * @param[in]  gain_lvl
+ * @retval  1: Request accept;
+ *          0 Request unacceptable cuz another calibration in process.
+ */
+int RequestCalibration(GainLevel_t gain_lvl, CaliType type)
+{
+    if(flag_in_calibration)
+    {
+        return 0;
+    }
+    else
+    {
+        ConfigGain(gain_lvl);
+        flag_in_calibration = 1;
+        global_cali_type = type;
+        return 1;
+    }
+}
+
+/**
+ * @brief  
+ * @details  
+ * @param[in]  wave the waveform statistic struct that enqueue the buffer
+ * @param[in]  buffer the sliding buffer
+ * @retval  1 buffer full, OK to get.
+ *          0 buffer not yet filler.
+ *          -1 !!!CALIBRATION NOT INITIALIZED.
+ */
+int FeedCalibration(WaveformStats * wave, WaveformSlidingBuffer * buffer)
+{
+    if(flag_in_calibration)
+    {
+        if(FeedRegularSlidingBuffer(&TempWave, &wave_buffer))
+        {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+/**
+ * @brief  Get calibration data to GlobalConf the global configuration.
+ * @details  
+ * @retval  
+ */
+int GetCalibration(void)
+{
+    if(flag_in_calibration)
+    {
+        if (global_cali_type == CaliGain)
+        {
+            GlobalConf.offset.gain = wave_buffer.output.RmS / WAVE_SLIDE_LENGTH;
+            ResetCalibration();
+            return 1;
+        }
+        if (global_cali_type == CaliBias)
+        {
+            GlobalConf.offset.bias = wave_buffer.output.average / WAVE_SLIDE_LENGTH;
+            ResetCalibration();
+            return 1;
+        }
+        return -1;
+    }
+    else
+    {return 0;}
+}
+
+void ResetCalibration(void)
+{
+    flag_in_calibration=0;
+    global_cali_type = CaliNone;
+    InitializeWaveformSlidingBuffer(&wave_buffer);
+}
+
+
+

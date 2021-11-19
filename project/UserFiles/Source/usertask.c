@@ -11,7 +11,6 @@
 
 #include "usertask.h"
 
-WaveformStats TempWave;
 
 /**
 * @brief Function implementing the ADCHandleTask thread.
@@ -50,10 +49,21 @@ void ADCHandleTaskFunction(void const *argument)
                 else
                     RegularMeasure(adc_buffer_1, ADC_BUFFER_SIZE, &GlobalConf, &TempWave);
 
-                if(FeedRegularSlidingBuffer(&TempWave, &wave_buffer))
+                if(flag_in_calibration)
                 {
-                    GetRegularSlidingOutput(&GlobalWave, &wave_buffer);
+                    if(FeedCalibration(&TempWave, &wave_buffer))
+                    {
+                        GetCalibration();
+                    }
                 }
+                else
+                {
+                    if(FeedRegularSlidingBuffer(&TempWave, &wave_buffer))
+                    {
+                        GetRegularSlidingOutput(&GlobalWave, &wave_buffer);
+                    }
+                }
+
 
                 flag_adc_buffer_processing[i] = 0;
                 flag_adc_buffer_ready[i] = 0;

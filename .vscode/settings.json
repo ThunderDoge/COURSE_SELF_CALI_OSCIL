@@ -32,7 +32,9 @@
         "usertask.h": "c",
         "font.h": "c",
         "adc_control.h": "c",
-        "stm32f4xx_hal.h": "c"
+        "stm32f4xx_hal.h": "c",
+        "limits": "c",
+        "type_traits": "c"
     },
     "git.ignoreLimitWarning": true
 }
