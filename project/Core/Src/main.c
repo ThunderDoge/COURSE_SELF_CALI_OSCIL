@@ -23,7 +23,7 @@
 #include "adc.h"
 #include "dac.h"
 #include "dma.h"
-#include "eth.h"
+#include "lwip.h"
 #include "tim.h"
 #include "gpio.h"
 #include "fsmc.h"
@@ -102,7 +102,6 @@ int main(void)
   MX_DAC_Init();
   MX_TIM7_Init();
   MX_FSMC_Init();
-  MX_ETH_Init();
   /* USER CODE BEGIN 2 */
   
   //User costomized initiation here.
