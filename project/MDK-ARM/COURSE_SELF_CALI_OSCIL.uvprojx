@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx,UNUSE_LWIP</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;    ../Drivers/STM32F4xx_HAL_Driver/Inc;    ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;    ../Middlewares/Third_Party/FreeRTOS/Source/include;    ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;    ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;    ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;    ../Drivers/CMSIS/Include;    ..\UserFiles\Include;    ..\UserFiles\SystemView\Config;    ..\UserFiles\SystemView\Sample\FreeRTOSV10;    ..\UserFiles\SystemView\SEGGER;../LWIP/App;../LWIP/Target;../Middlewares/Third_Party/LwIP/src/include;../Middlewares/Third_Party/LwIP/system;../Middlewares/Third_Party/LwIP/src/include/netif/ppp;../Middlewares/Third_Party/LwIP/src/include/lwip;../Middlewares/Third_Party/LwIP/src/include/lwip/apps;../Middlewares/Third_Party/LwIP/src/include/lwip/priv;../Middlewares/Third_Party/LwIP/src/include/lwip/prot;../Middlewares/Third_Party/LwIP/src/include/netif;../Middlewares/Third_Party/LwIP/src/include/compat/posix;../Middlewares/Third_Party/LwIP/src/include/compat/posix/arpa;../Middlewares/Third_Party/LwIP/src/include/compat/posix/net;../Middlewares/Third_Party/LwIP/src/include/compat/posix/sys;../Middlewares/Third_Party/LwIP/src/include/compat/stdc;../Middlewares/Third_Party/LwIP/system/arch</IncludePath>
+              <IncludePath>../Core/Inc;       ../Drivers/STM32F4xx_HAL_Driver/Inc;       ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;       ../Middlewares/Third_Party/FreeRTOS/Source/include;       ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;       ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;       ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;       ../Drivers/CMSIS/Include;       ..\UserFiles\Include;       ..\UserFiles\SystemView\Config;       ..\UserFiles\SystemView\Sample\FreeRTOSV10;       ..\UserFiles\SystemView\SEGGER;   ../LWIP/App;   ../LWIP/Target;   ../Middlewares/Third_Party/LwIP/src/include;   ../Middlewares/Third_Party/LwIP/system;   ../Middlewares/Third_Party/LwIP/src/include/netif/ppp;   ../Middlewares/Third_Party/LwIP/src/include/lwip;   ../Middlewares/Third_Party/LwIP/src/include/lwip/apps;   ../Middlewares/Third_Party/LwIP/src/include/lwip/priv;   ../Middlewares/Third_Party/LwIP/src/include/lwip/prot;   ../Middlewares/Third_Party/LwIP/src/include/netif;   ../Middlewares/Third_Party/LwIP/src/include/compat/posix;   ../Middlewares/Third_Party/LwIP/src/include/compat/posix/arpa;   ../Middlewares/Third_Party/LwIP/src/include/compat/posix/net;   ../Middlewares/Third_Party/LwIP/src/include/compat/posix/sys;   ../Middlewares/Third_Party/LwIP/src/include/compat/stdc;   ../Middlewares/Third_Party/LwIP/system/arch</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -717,6 +717,11 @@
               <FileName>usertask.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\UserFiles\Source\usertask.c</FilePath>
+            </File>
+            <File>
+              <FileName>dac_control.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\UserFiles\Source\dac_control.c</FilePath>
             </File>
           </Files>
         </Group>

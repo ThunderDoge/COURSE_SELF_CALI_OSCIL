@@ -129,8 +129,7 @@ void LwIPHandleTaskFunction(void const *argument)
 void DACHandleTaskFunction(void const *argument)
 {
 
-    __HAL_TIM_ENABLE_IT(&htim7, TIM_IT_UPDATE);
-    HAL_TIM_Base_Start(&htim7);
+    SetDacSin(100);
 
     for (;;)
     {

@@ -35,6 +35,7 @@
 #endif
 
 #include "userinit.h"
+#include "dac_control.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -174,20 +175,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-uint32_t t=0;
-uint32_t p=0;
-uint32_t out_val = 0;
-
-float get_t_sin(void)
-{
-	++t;
-	if(t > 3000)
-	{
-		p = osKernelSysTick() % 300;
-		t = 0;
-	}
-	return (t+p)/300.0f * 3.14159f;
-}
 /* USER CODE END 4 */
 
  /**
@@ -209,13 +196,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 1 */
 	if(htim == &htim7)
 	{
-		float f = get_t_sin();
-		float sf = sinf( f );
-		out_val = ( 2000.0f + 1500.0f * sf );
-		
-		HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, out_val);
-		HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
-	}
+        TIM7_Update_DAC_IT();
+    }
   /* USER CODE END Callback 1 */
 }
 
