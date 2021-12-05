@@ -219,25 +219,27 @@ float RmS_FixedWaveform(uint16_t *pbuffer, uint32_t start_index, uint32_t end_in
 float RmS_RawWaveform(uint16_t *pbuffer, uint32_t start_index, uint32_t end_index, WaveMeasureConfig_t *conf)
 {
     float result;
+    int v;
+    int t;
+    long long sum_of_sqr = 0;
 
-    uint32_t sum_of_sqr = 0;
-
-    int integer_bias = conf->offset.bias * 4095 / GainLvlToRange[(uint32_t)conf->gain_level];
-    float gain = (1.0f + conf->offset.gain) * GainLvlToRange[(uint32_t)conf->gain_level] / 4096.0f;
+    int integer_bias = conf->offset.bias * 2047 / GainLvlToRange[(uint32_t)conf->gain_level];
+    float gain = (1.0f + conf->offset.gain) * GainLvlToRange[(uint32_t)conf->gain_level] ;
 
     // get sum of squares (bias substracted)
     for (size_t i = start_index; i <= end_index; i++)
     {
-        int v = pbuffer[i] - 2047 - integer_bias;
-        sum_of_sqr += v * v;
+        v = pbuffer[i] - 2047 - integer_bias;
+        t = v * v;
+        sum_of_sqr += t;
     }
 
     int cnt = end_index - start_index;
 
-    float mean = sum_of_sqr / (cnt > 0 ? cnt : 1);
+    float mean = sum_of_sqr / cnt;
 
     // fix gain offset.
-    return result = sqrt(mean) * (gain);
+    return result = sqrt(mean) * (gain) / 2047.0f;
 }
 
 /**
@@ -250,9 +252,9 @@ float Average_RawWaveformRawWaveform(uint16_t *pbuffer, uint32_t start_index, ui
 {
     float result;
 
-    int integer_bias = conf->offset.bias * 4095 / GainLvlToRange[(uint32_t)conf->gain_level];
+    int integer_bias = conf->offset.bias * 2047 / GainLvlToRange[(uint32_t)conf->gain_level];
     float scale = GainLvlToRange[(uint32_t)conf->gain_level];
-    float gain = (1.0f + conf->offset.gain) * scale / 4096.0f;
+    float gain = (1.0f + conf->offset.gain) * scale / 2047.0f;
 
     int sum = 0;
 
@@ -336,16 +338,23 @@ void WaveformDataAnalyze(uint16_t *pbuffer, uint32_t buf_length, WaveformStats *
         }
     }
 
-    // register edges.
-    if (cnt_of_risedge == 0)
-        cnt_of_risedge = 1;
-
     uint32_t dots_per_edges;
 
-    if (first_edging_index != -1 && last_edging_index != -1)
-        dots_per_edges = (last_edging_index - first_edging_index) / cnt_of_risedge;
-    else
+    // register edges.
+    if (cnt_of_risedge < 2)
+    {
         dots_per_edges = 0XFFFF;
+        wave->ACDCType = DC;
+    }
+    else
+    {
+        if (first_edging_index != -1 && last_edging_index != -1)
+            dots_per_edges = (last_edging_index - first_edging_index) / (cnt_of_risedge - 1);
+        else
+            dots_per_edges = 0XFFFF;
+    }
+
+
 
     // data validation - evaluation condition ->
 
@@ -603,4 +612,5 @@ void ResetCalibration(void)
 }
 
 
-
+#undef LOOP_NEXT
+#undef LOOP_PREV
