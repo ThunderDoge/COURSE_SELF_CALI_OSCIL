@@ -19,6 +19,8 @@
 #include "cmsis_os.h"
 #include "ILI93xx.h"
 #include "gui.h"
+#include "myLWIPAPP.h"
+#include "tansmitt.h"
 
 #define _USE_MATH_DEFINES
 
@@ -26,4 +28,6 @@
 
 #include "adc_control.h"
 
+extern uint8_t cali_flag;
+extern enum TypesOfFrame cali_scale;
 

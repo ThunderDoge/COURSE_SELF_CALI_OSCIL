@@ -85,7 +85,7 @@ void LcdDisplayParam(void)
         LCD_ShowString(150, 160, 200, 16, 16,    cali );
 
         taskEXIT_CRITICAL();
-        osDelay(10);
+        osDelay(100);
     }
     
 
@@ -93,7 +93,7 @@ void LcdDisplayParam(void)
 
 void LcdVertical(void)
 {
-    uint8_t selection_number = 1;
+    uint8_t selection_number = GlobalConf.gain_level + 1;
 
     LCD_Fill(30, 300, 300, 500, GREEN);
     LCD_ShowString(30, 300, 200, 16, 16, "KEY_UP=BACK KEY_1=ENTER");
@@ -106,10 +106,10 @@ void LcdVertical(void)
         switch (selection_number)
         {
         case 1:
-            LCD_ShowString(150, 380, 200, 16, 16, "10V");
+            LCD_ShowString(150, 380, 200, 16, 16, "1V");
             break;
         case 2:
-            LCD_ShowString(150, 380, 200, 16, 16, "1V");
+            LCD_ShowString(150, 380, 200, 16, 16, "10V");
             break;
         case 3:
             LCD_ShowString(150, 380, 200, 16, 16, "2V");
@@ -146,7 +146,7 @@ void LcdVertical(void)
         default:
             break;
         }
-        osDelay(1);
+        osDelay(10);
     }
 }
 
@@ -154,8 +154,10 @@ void LcdVertical(void)
 
 void LcdHorizontal(void)
 {
-    uint8_t selection_number = 1;
-
+//    uint8_t selection_number = 1;
+	uint16_t freq_kHz = GlobalConf.sampling_freq_kHz;
+	
+	char txt[10];
     LCD_Fill(30, 300, 300, 600, GREEN);
     LCD_ShowString(30, 300, 200, 16, 16, "KEY_UP=BACK KEY_1=ENTER");
     LCD_ShowString(30, 320, 200, 16, 16, "KEY_0=NEXT KEY_2=PREV");
@@ -164,56 +166,67 @@ void LcdHorizontal(void)
 
     while (1)
     {
-        switch (selection_number)
-        {
-        case 1:
-            LCD_ShowString(150, 380, 200, 16, 16, "1MSa/s");
-            break;
-        case 2:
-            LCD_ShowString(150, 380, 200, 16, 16, "500kSa/s");
-            break;
-        case 3:
-            LCD_ShowString(150, 380, 200, 16, 16, "250kSa/s");
-            break;
-        case 4:
-            LCD_ShowString(150, 380, 200, 16, 16, "100kSa/s");
-            break;
-        case 5:
-            LCD_ShowString(150, 380, 200, 16, 16, "50kSa/s");
-            break;
-        case 6:
-            LCD_ShowString(150, 380, 200, 16, 16, "25kSa/s");
-            break;
-        case 7:
-            LCD_ShowString(150, 380, 200, 16, 16, "10kSa/s");
-            break;
-        case 8:
-            LCD_ShowString(150, 380, 200, 16, 16, "5kSa/s");
-            break;
-        case 9:
-            LCD_ShowString(150, 380, 200, 16, 16, "2kSa/s");
-            break;
-        case 10:
-            LCD_ShowString(150, 380, 200, 16, 16, "1kSa/s");
-            break;
+		if(freq_kHz>100)
+		{
+			sprintf(txt,"%-4dkSa/s",GlobalConf.sampling_freq_kHz);
+			LCD_ShowString(150, 380, 200, 16, 16, txt);
+		}
+		else
+		{
+			sprintf(txt,"%-4dkSa/s",freq_kHz);
+			LCD_ShowString(150, 380, 200, 16, 16, txt);
+		}
+//        switch (selection_number)
+//        {
+//        case 1:
+//            LCD_ShowString(150, 380, 200, 16, 16, "1MSa/s");
+//            break;
+//        case 2:
+//            LCD_ShowString(150, 380, 200, 16, 16, "500kSa/s");
+//            break;
+//        case 3:
+//            LCD_ShowString(150, 380, 200, 16, 16, "250kSa/s");
+//            break;
+//        case 4:
+//            LCD_ShowString(150, 380, 200, 16, 16, "100kSa/s");
+//            break;
+//        case 5:
+//            LCD_ShowString(150, 380, 200, 16, 16, "50kSa/s");
+//            break;
+//        case 6:
+//            LCD_ShowString(150, 380, 200, 16, 16, "25kSa/s");
+//            break;
+//        case 7:
+//            LCD_ShowString(150, 380, 200, 16, 16, "10kSa/s");
+//            break;
+//        case 8:
+//            LCD_ShowString(150, 380, 200, 16, 16, "5kSa/s");
+//            break;
+//        case 9:
+//            LCD_ShowString(150, 380, 200, 16, 16, "2kSa/s");
+//            break;
+//        case 10:
+//            LCD_ShowString(150, 380, 200, 16, 16, "1kSa/s");
+//            break;
 
-        default:
-            break;
-        }
+//        default:
+//            break;
+//        }
 
         switch (KEY_Scan(0))
         {
         case KEY_0_PRES:
-            NEXT_NUM(selection_number, 1, 10);
+            NEXT_NUM(freq_kHz, 1, 101);
             LCD_Fill(150, 400, 300, 450, GREEN); // Clear 'APPLYED'
             LCD_Fill(150, 380, 350, 400, GREEN); // Clear selection line.
             break;
         case KEY_1_PRES:
-            ConfigFreqDiv(selection_number -1);
+			GlobalConf.freq_Autoflag = 0;
+            ConfigFreqDiv(freq_kHz);
             LCD_ShowString(150, 400, 200, 16, 16, "APPLYED");
             break;
         case KEY_2_PRES:
-            PREV_NUM(selection_number, 1, 10);
+            PREV_NUM(freq_kHz, 1, 101);
             LCD_Fill(150, 400, 300, 450, GREEN); // Clear 'APPLYED'
             LCD_Fill(150, 380, 350, 400, GREEN); // Clear selection line.
             break;
@@ -225,7 +238,7 @@ void LcdHorizontal(void)
         default:
             break;
         }
-        osDelay(1);
+        osDelay(10);
     }
 }
 
@@ -266,7 +279,7 @@ void LcdCalibrationDC(void)
         default:
             break;
         }
-        osDelay(1);
+        osDelay(10);
     }
 }
 
@@ -300,7 +313,7 @@ void LcdCalibrationGain(void)
         default:
             break;
         }
-        osDelay(1);
+        osDelay(10);
     }
 }
 void LcdCalibration(void)
@@ -364,8 +377,95 @@ void LcdCalibration(void)
         default:
             break;
         }
-        osDelay(1);
+        osDelay(10);
     }
+}
+
+
+
+void Connection(void)
+{
+	uint16_t i;
+//	uint32_t myIPAddress;
+	uint16_t databuf[100];
+	char txt[20];
+	LCD_Fill(30, 300, 300, 300, GREEN);
+    LCD_ShowString(30, 300, 200, 16, 16, "KEY_UP=BACK KEY_1=Connection");
+	LCD_ShowString(30, 320, 200, 16, 16, "KEY_0=Test_Read KEY_2=Test_Send");
+	while(1)
+	{
+		//LCD_Fill(150, 380, 150 + 200, 380 + 16, GREEN);
+		switch (KEY_Scan(0))
+        {
+        case KEY_0_PRES:
+//			myIPAddress = ip4_addr_get_u32(&(tcp_Echoserver_PCB->local_ip));
+//			sprintf(txt,"%u.%u.%u.%u",(*(((uint8_t*)&myIPAddress)+0)), (*(((uint8_t*)&myIPAddress)+1)), 
+//							(*(((uint8_t*)&myIPAddress)+2)), (*(((uint8_t*)&myIPAddress)+3)));
+			if(tcp_server_flag & (1<<6))
+			{
+				tcp_server_flag &= ~(1<<6);
+				sprintf(txt,"%x%x%x%x%x",((uint16_t*)tcp_client_recvbuf)[0], ((uint16_t*)tcp_client_recvbuf)[1], ((uint16_t*)tcp_client_recvbuf)[2], \
+											((uint16_t*)tcp_client_recvbuf)[3], ((uint16_t*)tcp_client_recvbuf)[4]);
+				LCD_ShowString(150, 400, 300, 16, 16, txt);
+			}
+			else
+			{
+				LCD_ShowString(150, 400, 200, 16, 16, "nodata");
+			}
+            break;
+        case KEY_1_PRES:
+			LCD_ShowString(150, 400, 200, 16, 16, "wait");;
+			if((tcp_server_flag &(1<<5)) == 0x00)
+			{
+				if(tcp_Connect() == ERR_OK)
+				{
+					//tcp_server_flag |= 1<<5;
+					LCD_ShowString(150, 400, 200, 16, 16, "OK  ");
+				}
+				else
+				{
+					LCD_ShowString(150, 400, 200, 16, 16, "ERR ");
+				}
+			}
+			else
+			{
+				tcp_close(tcp_Echoserver_PCB);
+				tcp_server_flag &= ~(1<<5);
+				LCD_ShowString(150, 400, 200, 16, 16, "Done");
+			}
+            break;
+        case KEY_2_PRES:
+			// send the FXXKING array of waveform here	
+			if((tcp_server_flag &(1<<5)) != 0x00)
+			{
+//				for(i=0;i<100;i++)
+//				{
+//					databuf[i] = i;
+//	//				tcp_server_sendbuf[i] = (uint16_t)(2000 + (1000 * sinf( (float)(i) / 30 *(3.14159f) )));
+//				}
+				databuf[0] = 0x4455;
+				databuf[1] = 3;
+				databuf[2] = 0;
+				databuf[3] = 0;
+				databuf[4] = 0xAABB;
+				ETH_SendData(5,databuf,0xff00U);
+				LCD_ShowString(150, 400, 200, 16, 16, "send");
+			}
+			else
+			{
+				LCD_ShowString(150, 400, 200, 16, 16, "noip");
+			}
+            break;
+        case KEY_UP_PRES:
+			LCD_Fill(150, 400, 300, 450, GREEN);
+            return;
+            break;
+
+        default:
+            break;
+        }
+		osDelay(10);
+	}
 }
 
 /**
@@ -435,7 +535,7 @@ void LcdMenu(void)
                 LCD_ShowString(30, 350, 200, 24, 24, "MANUAL CONFIG");
                 break;
             case 4:
-
+				Connection();
                 LCD_Fill(30, 350, 400, 378, GREEN);
                 LCD_Fill(150, 380, 350, 400, GREEN); // Clear selection line.
 
@@ -455,7 +555,7 @@ void LcdMenu(void)
         default:
             break;
         }
-        osDelay(1);
+        osDelay(10);
     }
 }
 

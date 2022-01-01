@@ -13,29 +13,30 @@ WaveMeasureConfig_t GlobalConf;
 WaveformSlidingBuffer wave_buffer;
 
 // ADC data buffers
-uint16_t adc_buffer_0[ADC_BUFFER_SIZE];
-uint16_t adc_buffer_1[ADC_BUFFER_SIZE];
+uint16_t adc_buffer_0[ADC_BUFFER_SIZE + Intro_Size];
+uint16_t adc_buffer_1[ADC_BUFFER_SIZE + Intro_Size];
 
 uint16_t data_scan_var;
 uint8_t flag_adc_buffer_ready[2];
 uint8_t flag_adc_buffer_processing[2];
 uint8_t flag_adc_sampling;
 uint32_t adc_buffer_time_stamp[2][2] = {0};
+uint16_t gainLv = 0;
 
 // List: from selection_number (SampFreqLvl) to TIM Divider number
 // When TIM Set to 1MHz
 uint16_t SampFreqLvlToDivNumber[10] =
     {
-        0,
-        1,
-        3,
-        9,
-        19,
-        39,
-        99,
-        199,
-        499,
-        999};
+        1000,
+        500,
+        250,
+        100,
+        50,
+        25,
+        10,
+        5,
+        2,
+        1};
 
 float GainLvlToRange[4] = {10.0f, 1.0f, 2.0f, 5.0f};
 
@@ -92,12 +93,12 @@ void Start_TIM_tiggered_ADC_DMA(void)
     //
     if (!flag_adc_buffer_ready[0])
     {
-        pdest = (void *)adc_buffer_0;
+        pdest = (void *)(adc_buffer_0 + Intro_Size);
         dest_buf_no = 0;
     }
     else if (!flag_adc_buffer_ready[1])
     {
-        pdest = (void *)adc_buffer_1;
+        pdest = (void *)(adc_buffer_1 + Intro_Size);
         dest_buf_no = 1;
     }
     else
@@ -141,12 +142,12 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
     if (hadc == &hadc1)
     {
 
-        if (__GET_ADC_DMA_M0AR(hadc) == adc_buffer_0)
+        if (__GET_ADC_DMA_M0AR(hadc) == (adc_buffer_0 + Intro_Size))
         {
             flag_adc_buffer_ready[0] = 1;
             flag_adc_sampling = 0;
         }
-        if (__GET_ADC_DMA_M0AR(hadc) == adc_buffer_1)
+        if (__GET_ADC_DMA_M0AR(hadc) == (adc_buffer_1 + Intro_Size))
         {
             flag_adc_buffer_ready[1] = 1;
             flag_adc_sampling = 0;
@@ -170,12 +171,36 @@ void ConfigGain(GainLevel_t selection_number)
  * @param[in]  
  * @retval  
  */
-void ConfigFreqDiv(SampFreqLvl_t selection_number)
+void ConfigFreqDiv(uint16_t freq_kHz)
 {
-    GlobalConf.sampling_freq = (SampFreqLvl_t)selection_number;
+    GlobalConf.sampling_freq_kHz = freq_kHz;
+    InitializeWaveformSlidingBuffer(&wave_buffer);
+    if(freq_kHz == 101)
+	{
+		GlobalConf.freq_Autoflag = 1;
+	}
+	if(freq_kHz>1000)
+	{
+		return;
+	}
+    uint16_t n = (1000/freq_kHz) - 1;
+
+    __HAL_TIM_SET_AUTORELOAD(&TRIGGER_TIM, n);
+    __HAL_TIM_SET_COMPARE(&TRIGGER_TIM, TIM_CHANNEL_2, (n - 1) / 2);
+}
+
+/**
+ * @brief  Set trigger timer freq 1MHz div by ?
+ * @details  
+ * @param[in]  
+ * @retval  
+ */
+void ConfigFreqDivAuto(uint32_t period)
+{
+    GlobalConf.sampling_freq_kHz = 200000/period;
     InitializeWaveformSlidingBuffer(&wave_buffer);
     
-    uint16_t n = SampFreqLvlToDivNumber[selection_number];
+    uint16_t n = (period/200)-1;
 
     __HAL_TIM_SET_AUTORELOAD(&TRIGGER_TIM, n);
     __HAL_TIM_SET_COMPARE(&TRIGGER_TIM, TIM_CHANNEL_2, (n - 1) / 2);
@@ -293,68 +318,68 @@ void WaveformDataAnalyze(uint16_t *pbuffer, uint32_t buf_length, WaveformStats *
     }
 
     // now measure frequncy.
-    uint16_t trig_voltage = (sampled_max + sampled_min) / 2; // set the trigger volt at middle.
+//    uint16_t trig_voltage = (sampled_max + sampled_min) / 2; // set the trigger volt at middle.
 
-    uint16_t is_cnt_risedge = 1; // here to select u wanna rising-edge or falling-edge.
+//    uint16_t is_cnt_risedge = 1; // here to select u wanna rising-edge or falling-edge.
 
-    uint32_t cnt_of_risedge = 0;
+//    uint32_t cnt_of_risedge = 0;
 
     int first_edging_index = -1;
     int last_edging_index = -1;
 
     // count of trigger-volt crossing.
     // and record FIRST & LAST crossing index.
-    for (uint32_t i = 3; i < buf_length - 1; i++) // left off: pbuffer[buf_length-1], the last data point.
-    {
+//    for (uint32_t i = 3; i < buf_length - 1; i++) // left off: pbuffer[buf_length-1], the last data point.
+//    {
 
-        if (is_cnt_risedge)
-        {
-            if (pbuffer[i] <= trig_voltage && pbuffer[i + 1] > trig_voltage) // detect risedge
-            {
-                cnt_of_risedge++;
-                if (first_edging_index == -1)
-                {
-                    first_edging_index = i;
-                }
+//        if (is_cnt_risedge)
+//        {
+//            if (pbuffer[i] <= trig_voltage && pbuffer[i + 1] > trig_voltage) // detect risedge
+//            {
+//                cnt_of_risedge++;
+//                if (first_edging_index == -1)
+//                {
+//                    first_edging_index = i;
+//                }
 
-                last_edging_index = i;
-            }
-        }
-        else
-        {
-            if (pbuffer[i] >= trig_voltage && pbuffer[i + 1] < trig_voltage) // detect falledge
-            {
-                cnt_of_risedge++;
-                // record edging index
-                if (first_edging_index == -1)
-                {
-                    first_edging_index = i;
-                }
+//                last_edging_index = i;
+//            }
+//        }
+//        else
+//        {
+//            if (pbuffer[i] >= trig_voltage && pbuffer[i + 1] < trig_voltage) // detect falledge
+//            {
+//                cnt_of_risedge++;
+//                // record edging index
+//                if (first_edging_index == -1)
+//                {
+//                    first_edging_index = i;
+//                }
 
-                last_edging_index = i;
-            }
-        }
-    }
+//                last_edging_index = i;
+//            }
+//        }
+//    }
 
-    // register edges.
-    if (cnt_of_risedge == 0)
-        cnt_of_risedge = 1;
+//    // register edges.
+//    if (cnt_of_risedge == 0)
+//        cnt_of_risedge = 1;
 
-    uint32_t dots_per_edges;
+//    uint32_t dots_per_edges;
 
-    if (first_edging_index != -1 && last_edging_index != -1)
-        dots_per_edges = (last_edging_index - first_edging_index) / cnt_of_risedge;
-    else
-        dots_per_edges = 0XFFFF;
+//    if (first_edging_index != -1 && last_edging_index != -1)
+//        dots_per_edges = (last_edging_index - first_edging_index) / cnt_of_risedge;
+//    else
+//        dots_per_edges = 0XFFFF;
 
     // data validation - evaluation condition ->
 
     InitializeWaveformStats(wave);
 
-    if (cnt_of_risedge > TOO_MANY_EDGES_CRITERIA)
-        wave->Evalue.FAST = 1;
-    if (cnt_of_risedge < TOO_LESS_EDGES_CRITERIA)
-        wave->Evalue.SLOW = 1;
+//    if (cnt_of_risedge > TOO_MANY_EDGES_CRITERIA)
+//        wave->Evalue.FAST = 1;
+//    if (cnt_of_risedge < TOO_LESS_EDGES_CRITERIA)
+//        wave->Evalue.SLOW = 1;
     if (sampled_max > HIGH_VALUE_CRITERIA)
         wave->Evalue.HIGH = 1;
     if (sampled_min < LOW_VALUE_EDGES_CRITERIA)
@@ -376,16 +401,16 @@ void WaveformDataAnalyze(uint16_t *pbuffer, uint32_t buf_length, WaveformStats *
 
     // statistics.
 
-    wave->edges = cnt_of_risedge;
-    if (cnt_of_risedge <= 2)
-    {
-        wave->freq = 0;
-    }
-    else
-    {
-        uint32_t count_per_edge = last_edging_index - first_edging_index / (cnt_of_risedge - 1);
-        wave->freq = 1000000 / (SampFreqLvlToDivNumber[(uint32_t)config->sampling_freq] + 1) / count_per_edge;
-    }
+//    wave->edges = cnt_of_risedge;
+//    if (cnt_of_risedge <= 2)
+//    {
+//        wave->freq = 0;
+//    }
+//    else
+//    {
+//        uint32_t count_per_edge = last_edging_index - first_edging_index / (cnt_of_risedge - 1);
+//        wave->freq = 1000000 / (SampFreqLvlToDivNumber[(uint32_t)config->sampling_freq] + 1) / count_per_edge;
+//    }
 
     // wave type.
 
@@ -601,6 +626,4 @@ void ResetCalibration(void)
     global_cali_type = CaliNone;
     InitializeWaveformSlidingBuffer(&wave_buffer);
 }
-
-
 

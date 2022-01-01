@@ -15,6 +15,7 @@
 #include "main.h"
 #include "adc.h"
 #include "tim.h"
+#include "stm32f4xx_hal_tim.h"
 
 #define TOO_MANY_EDGES_CRITERIA 40
 #define TOO_LESS_EDGES_CRITERIA 5
@@ -30,16 +31,16 @@ typedef enum GainLevel_e {
 } GainLevel_t;
 
 typedef enum SampFreqLvl{
-    f1MSaps=0,
-    f500kSaps,
-    f250kSaps,
-    f100kSaps,
-    f50kSaps,
-    f25kSaps,
-    f10kSaps,
-    f5kSaps,
-    f2kSaps,
-    f1kSaps
+    f1MSaps		= 1000,
+    f500kSaps	= 500,
+    f250kSaps	= 250,
+    f100kSaps	= 100,
+    f50kSaps	= 50,
+    f25kSaps	= 25,
+    f10kSaps	= 10,
+    f5kSaps		= 5,
+    f2kSaps		= 2,
+    f1kSaps		= 1
 }SampFreqLvl_t;
 
 extern uint16_t SampFreqLvlToDivNumber[10];
@@ -69,15 +70,25 @@ typedef struct WaveEvalueType_s
 } WaveEvalueType;
 
 
+//频率采样的结构体
+typedef struct caliFreqType_s
+{
+	uint32_t shortTimeNum;
+	uint16_t longTimeNum;
+	uint16_t overTime;
+}	caliFreqType;
+
 // real waveform statistics.
 typedef struct WaveformStats_s
 {
-    float maximum;  // (Volt)
-    float minimum;  // (Volt)
+    float maximum;  //	(Volt)
+    float minimum;  //	(Volt)
     uint32_t edges;
-    float RmS;      // (Volt)
-    float average;  // (Volt)
-    float freq;     // (Hz)
+    float RmS;      // 	(Volt)
+    float average;  //	(Volt)
+    float freq;     //	(Hz)
+	uint32_t period;//	(0.25us)
+	caliFreqType caliFreqStruct;
 
     WaveEvalueType Evalue;
     WaveType ACDCType;
@@ -93,9 +104,10 @@ typedef struct
 
 typedef struct WaveMeasureConfig_s
 {
-    SampFreqLvl_t sampling_freq;
+    uint16_t sampling_freq_kHz;
     GainLevel_t gain_level;
     AdcOffsetSheet offset;
+	uint8_t freq_Autoflag;
 }WaveMeasureConfig_t;
 
 typedef struct wsb
@@ -113,8 +125,17 @@ typedef struct ct
     WaveformStats wave;
 }CalibrationTickit;
 
+typedef enum glv
+{
+	gain10x = 0,
+	gain5x = 2,
+	gain2x = 3,
+	gain1x = 1,
+}gainLvType;
+
 // USER DEFINES
-#define ADC_BUFFER_SIZE 3000
+#define Intro_Size 4
+#define ADC_BUFFER_SIZE 1000
 #define TRIGGER_TIM htim2
 
 // Global variables.
@@ -130,8 +151,8 @@ extern uint8_t flag_adc_sampling;
 extern uint8_t flag_in_calibration;
 
 
-extern uint16_t adc_buffer_0[ADC_BUFFER_SIZE];
-extern uint16_t adc_buffer_1[ADC_BUFFER_SIZE];
+extern uint16_t adc_buffer_0[ADC_BUFFER_SIZE + Intro_Size];
+extern uint16_t adc_buffer_1[ADC_BUFFER_SIZE + Intro_Size];
 
 // Save/Load your configurations with Flash-on-Chip
 int SaveMeasureConfig(WaveMeasureConfig_t* conf);
@@ -157,7 +178,8 @@ int FeedRegularSlidingBuffer(WaveformStats* wave, WaveformSlidingBuffer* buffer)
 void GetRegularSlidingOutput(WaveformStats* wave, WaveformSlidingBuffer* buffer);
 // Manual config
 void ConfigGain(GainLevel_t selection_number);
-void ConfigFreqDiv(SampFreqLvl_t selection_number);
+void ConfigFreqDiv(uint16_t freq_kHz);
+void ConfigFreqDivAuto(uint32_t period);
 
 // Start/Stop TIM-triggered ADC convertion.
 void Start_TIM_tiggered_ADC_DMA(void);
