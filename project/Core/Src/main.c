@@ -23,7 +23,7 @@
 #include "adc.h"
 #include "dac.h"
 #include "dma.h"
-#include "eth.h"
+#include "lwip.h"
 #include "tim.h"
 #include "gpio.h"
 #include "fsmc.h"
@@ -33,7 +33,7 @@
 #ifndef UNUSE_LWIP
 #include "app_ethernet.h"
 #endif
-
+#include "adc_control.h"
 #include "userinit.h"
 /* USER CODE END Includes */
 
@@ -102,7 +102,7 @@ int main(void)
   MX_DAC_Init();
   MX_TIM7_Init();
   MX_FSMC_Init();
-  MX_ETH_Init();
+  MX_TIM9_Init();
   /* USER CODE BEGIN 2 */
   
   //User costomized initiation here.
@@ -189,6 +189,31 @@ float get_t_sin(void)
 	}
 	return (t+p)/300.0f * 3.14159f;
 }
+
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+{
+	if(htim == &htim9)
+	{
+		if(htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2)
+		{
+			if(GlobalWave.caliFreqStruct.overTime == 1)
+			{
+				GlobalWave.caliFreqStruct.overTime = 0;
+				GlobalWave.caliFreqStruct.longTimeNum = 0;
+				GlobalWave.period = 0xFFFFFFFF;
+				GlobalWave.freq = 0;
+			}
+			else
+			{
+				GlobalWave.caliFreqStruct.shortTimeNum = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
+				GlobalWave.period = GlobalWave.caliFreqStruct.shortTimeNum + (((uint32_t)GlobalWave.caliFreqStruct.longTimeNum-1) << 16);
+				GlobalWave.freq = 2000000.0f/GlobalWave.period;
+				GlobalWave.caliFreqStruct.longTimeNum = 0;
+				GlobalWave.caliFreqStruct.shortTimeNum = 0;
+			}
+		}
+	}
+}
 /* USER CODE END 4 */
 
  /**
@@ -216,6 +241,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		
 		HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, out_val);
 		HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
+	}
+	//Freq code
+	if(htim == &htim9)
+	{
+		if(GlobalWave.caliFreqStruct.longTimeNum < 64)
+		{
+			GlobalWave.caliFreqStruct.longTimeNum++;
+		}
+		else
+		{
+			GlobalWave.caliFreqStruct.overTime = 1;
+			GlobalWave.freq = -1;
+		}
 	}
   /* USER CODE END Callback 1 */
 }
