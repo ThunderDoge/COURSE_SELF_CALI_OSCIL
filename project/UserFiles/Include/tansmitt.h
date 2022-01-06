@@ -1,20 +1,18 @@
 #ifndef _TANSMITT_H
 #define _TANSMITT_H
 
-#include "main.h"
-#include "adc_control.h"
-#include "usertask.h"
+#include "stdint.h"
 
 enum TypesOfFrame
 {
     // Upper to Lower
-    START_ALL_SCALE_CALI,   // 开始所有档�?
+    START_ALL_SCALE_CALI,   // ?�?�?�?�?????�???
     CALI_ON_1V_SCALE,
     CALI_ON_2V_SCALE,
     CALI_ON_5V_SCALE,
     CALI_ON_10V_SCALE,
 
-    APPLY_BIAS,
+    APPLY_BIAS_1V_SCALE,
 
     APPLY_GAIN_1V,
     APPLY_GAIN_2V,
@@ -27,26 +25,34 @@ enum TypesOfFrame
     RMS_ON_5V_SCALE,
     RMS_ON_10V_SCALE,
 
-    CMD_SEQUENCE_ERR,
-	
-	END_OF_TypesOfFrame	// LET THIS SYMBOL BE THE END!
+    CMD_SEQUENCE_ERR
 };
 
-typedef __packed struct
+typedef struct 
 {
-	uint16_t frame_header; // = 0x4455;//帧头
+	uint16_t para_frame_header;
 	
-    uint16_t type_of_frame;
+    uint32_t type_of_frame;
     float value_of_frame;
 
-	uint16_t frame_tail; // = 0xAABB;//帧尾 
+	uint16_t frame_tail;
 }ONE_PARAMETER_TO_SEND;
 
-extern float safe_buffer[END_OF_TypesOfFrame+1];
-extern uint8_t safe_buffer_pending[END_OF_TypesOfFrame+1];
+typedef struct  
+{
+	uint16_t data_frame_header;
+	uint16_t data[1500];
+	uint16_t frame_tail;
+}DATA_POINTS_TO_SEND;
 
+extern ONE_PARAMETER_TO_SEND Parameter;
+extern DATA_POINTS_TO_SEND Data;
+
+
+void Para_Struct_Init(ONE_PARAMETER_TO_SEND* s);
+void Data_Struct_Init(DATA_POINTS_TO_SEND* s);
+void TranmittDataPointsAna(void *buffer_receive, uint32_t length);
 void LoadStruct(ONE_PARAMETER_TO_SEND* frame, enum TypesOfFrame type,  float value);
-void TranmittDataAna(uint16_t *buffer_receive, uint32_t length);
 
 #endif
 //end

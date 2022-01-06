@@ -63,7 +63,7 @@ err_t tcp_server_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err
  			tcp_recved(tpcb,p->tot_len);//用于获取接收数据,通知LWIP可以获取更多数据
 			pbuf_free(p);  	//释放内存
 			ret_err=ERR_OK;
-			TranmittDataAna((uint16_t*)tcp_client_recvbuf, data_len);
+			TranmittDataPointsAna((uint16_t*)tcp_client_recvbuf, data_len);
 		}
 	}else//服务器关闭了
 	{

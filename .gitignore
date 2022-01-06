@@ -1,3 +1,17 @@
 *.crf
 *.d
 *.o
+*.TMP
+*.BAT
+*.49997
+*.uvoptx
+*.htm
+*.lnp
+*.map
+*.sct
+*.dep
+*.Bak
+*.iex
+*.scvd
+*.lst
+*.zore

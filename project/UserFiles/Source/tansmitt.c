@@ -1,204 +1,184 @@
 #include "tansmitt.h"
+#include "string.h"
 #define mybuffer_length 10000
+#define data_to_plot_buffer_length 1000
 
-uint32_t start_point = 0;
-uint16_t mybuffer[mybuffer_length];   //上位机收到帧头，RMS_ON_1V_SCALE，RMS_ON_2V_SCALE，RMS_ON_5V_SCALE，
-					   				//RMS_ON_10V_SCALE，CMD_SEQUENCE_ERR，帧尾
+uint16_t mybuffer[mybuffer_length];
 
+float safe_buffer[CMD_SEQUENCE_ERR + 1];
+uint16_t data_to_plot_buffer[data_to_plot_buffer_length];
+int start_point = 0; //index of first free location
 
-//float safe_buffer[END_OF_TypesOfFrame+1];
-//uint8_t safe_buffer_pending[END_OF_TypesOfFrame+1];
+void Para_Struct_Init(ONE_PARAMETER_TO_SEND *Parameter)
+{
+	Parameter->para_frame_header = 0x4455;
+	Parameter->type_of_frame = 0U;
+	Parameter->value_of_frame = 0.0f;
+	Parameter->frame_tail = 0xAABB;
+}
 
-
-
-void Copy_to_End_of(uint16_t * to_buffer, uint16_t * from_buffer, uint32_t from_buffer_length)
+void Data_Struct_Init(DATA_POINTS_TO_SEND *Data)
 {
 	int i;
-	/*if(start_point + from_buffer_length > mybuffer_length)
+	Data->data_frame_header = 0x5544;
+	for (i = 0; i < 1500; i++)
 	{
-		
-	}*/
-	for(i = 0; i < from_buffer_length; i++)
-	{
-		to_buffer[i + start_point] = from_buffer[i];
+		Data->data[i] = 0;
 	}
-	start_point = start_point + from_buffer_length; 
+	Data->frame_tail = 0xAABB;
 }
 
-//找帧头0x4455的index
-int Find_Header(uint16_t * buffer, uint32_t length)
+//  Find a valid frame of ONE_PARAMETER_TO_SEND.
+// buffer : where to search
+// length : length of [buffer]
+// ender_index : this var will store index of ender
+// return val = {   >=0 : the index of head the valid frame.
+//                  -1  : no valid frame.
+int Find_Parameter_Header(uint16_t *buffer, uint32_t length, int *ender_index)
 {
 	int i;
-	int head_result = 0;
-	for(i = 0; i < length; i++)
+	int para_head_result = -1;
+	// Find the header: 0x4455
+	for (i = 0; i < length; i++)
 	{
-		if(buffer[i] == 0x4455)
+		if (buffer[i] == 0x4455)
 		{
-			head_result = i;
+			para_head_result = i;
 			break;
 		}
 	}
-	return head_result;
-}
+	// Verify the frame tail.
+	ONE_PARAMETER_TO_SEND *sptr = (ONE_PARAMETER_TO_SEND *)(&buffer[para_head_result]);
+	if (sptr->frame_tail == 0XAABB)
+	{
+		*ender_index = ((uint16_t *)(&(sptr->frame_tail)) - (uint16_t *)buffer); // gives the distance between 2 pointer {header, buffer}.
+		if (*ender_index >= mybuffer_length)									 // check if ender_index is a exceeded access.
+		{
+			return -1;
+		}
 
-//找帧尾0xAABB的index 
-int Find_Ender(uint16_t * buffer, uint32_t length)
-{
-	int end_result = -1;
-	int head_result = Find_Header(buffer, length);
-	if(buffer[head_result + sizeof(uint16_t) + sizeof(uint32_t) + sizeof(float)] == 0xAABB)
-	{
-		end_result = head_result + sizeof(uint16_t) + sizeof(uint32_t) + sizeof(float); 
+		return para_head_result;
 	}
-	else
+	else // ender error.
 	{
-		end_result = -1;
-	}
-	return end_result;
-}
-
-//响应校准，配置增益和传输数据格式
-void set_Cali_State(uint16_t cmd)
-{
-	switch((enum TypesOfFrame)cmd)
-	{
-		case(START_ALL_SCALE_CALI):
-		{
-			flag_in_calibration = 1;
-			break;
-		}
-		case(CALI_ON_1V_SCALE):
-		{
-			flag_in_calibration = 1;
-			ConfigGain(Gain_10x);
-			cali_scale = RMS_ON_1V_SCALE;
-			break;
-		}
-		case(CALI_ON_2V_SCALE):
-		{
-			flag_in_calibration = 1;
-			ConfigGain(Gain_5x);
-			cali_scale = RMS_ON_2V_SCALE;
-			break;
-		}
-		case(CALI_ON_5V_SCALE):
-		{
-			flag_in_calibration = 1;
-			ConfigGain(Gain_2x);
-			cali_scale = RMS_ON_5V_SCALE;
-			break;
-		}
-		case(CALI_ON_10V_SCALE):
-		{
-			flag_in_calibration = 1;
-			ConfigGain(Gain_1x);
-			cali_scale = RMS_ON_10V_SCALE;
-			break;
-		}
-		default:
-		{
-			break;
-		}
+		return -1;
 	}
 }
 
-//数据解析（上位机收数据用）
-void TranmittDataAna(uint16_t *buffer_receive, uint32_t length)
+//  Find a valid frame of DATA_POINTS_TO_SEND.
+// buffer : where to search
+// length : length of [buffer]
+// ender_index : this var will store index of ender
+// return val = {   >=0 : the index of head the valid frame.
+//                  -1  : no valid frame.
+int Find_Data_Header(uint16_t *buffer, uint32_t length, int *ender_index)
 {
 	int i;
-	static uint32_t buffer = 0;
-	static uint16_t caliCmd = 0xFFFF;
-	static uint16_t unPackState;
-	for(i = 0; i < length; i++)
+	int data_head_result = -2;
+	// Find the header: 0x5544
+	for (i = 0; i < length; i++)
 	{
-		switch(unPackState)
+		if (buffer[i] == 0x5544)
 		{
-			case(0):
-			{
-				if(buffer_receive[i] == 0x4455)
-				{
-					unPackState = 1;
-				}
-				break;
-			}
-			case(1):
-			{
-				caliCmd = buffer_receive[i];
-				unPackState = 2;
-				break;
-			}
-			case(2):
-			{
-				buffer = (uint32_t)buffer_receive[i] << 16;
-				unPackState = 3;
-				break;
-			}
-			case(3):
-			{
-				buffer |= (uint32_t)buffer_receive[i];
-				unPackState = 4;
-				break;
-			}
-			case(4):
-			{
-				if(buffer_receive[i] == 0xAABB)
-				{
-					set_Cali_State(caliCmd);
-					flag_in_calibration = 1;
-				}
-				else
-				{
-					;
-				}
-				buffer = 0;
-				caliCmd = 0xFFFF;
-				unPackState = 0;
-				break;
-			}
-			default:
-			{
-				buffer = 0;
-				caliCmd = 0xFFFF;
-				unPackState = 0;
-				break;
-			}
+			data_head_result = i;
+			break;
 		}
 	}
-//	int header_index;
-//	int ender_index;
-//    Copy_to_End_of(mybuffer, buffer_receive, length);
 
-//    // Data Ana
-//    header_index = Find_Header(mybuffer, mybuffer_length);   // Find 0x4455
-//    ender_index = Find_Ender(mybuffer, mybuffer_length);     //  0xAABB
+	// Verify the frame tail.
+	DATA_POINTS_TO_SEND *sptr = (DATA_POINTS_TO_SEND *)(&buffer[data_head_result]);
+	if (sptr->frame_tail == 0XAABB)
+	{
+		*ender_index = ((uint16_t *)(&(sptr->frame_tail)) - (uint16_t *)buffer); // gives the distance between 2 pointer {header, buffer}.
+		if (*ender_index >= mybuffer_length)									 // check if ender_index is a exceeded access.
+		{
+			return -1;
+		}
 
-//    ONE_PARAMETER_TO_SEND *t;
-//    t = (void*)(& mybuffer[header_index]);
-//	
-//	// Copy ur data to somewhere safe.
-//	safe_buffer[t->type_of_frame] = t->value_of_frame;
-//	safe_buffer_pending[t->type_of_frame] = 1;
-//	
-//    // Erase mybuffer[0] ~ mybuffer[ender_index];
-//	for(i = 0; i <= ender_index; i++)
-//	{
-//		mybuffer[i] = 0;
-//	}
-//	
-//    // Copy mybuffer[ender_index + 1] -> mybuffer[0];
-//	for(i = 0; i < mybuffer_length - sizeof(ONE_PARAMETER_TO_SEND); i++)
-//	{
-//		mybuffer[i] = mybuffer[i + ender_index + 1];  
-//	}
-//	
-//	start_point = start_point - sizeof(ONE_PARAMETER_TO_SEND); 
+		return data_head_result;
+	}
+	else // ender error.
+	{
+		return -1;
+	}
 }
 
-//装载结构体（上位机发数据用）
-void LoadStruct(ONE_PARAMETER_TO_SEND* frame, enum TypesOfFrame type,  float value)
+// move buffer[ender_index+1 ~ mybuffer_length] to head of mybuffer
+void ClearFrameFromHeadTo(uint16_t *buffer, int ender_index)
 {
-	frame -> frame_header = 0x4455;
-    frame -> type_of_frame = type;
-    frame -> value_of_frame = value;
-	frame -> frame_tail = 0xAABB;
+	for (int i = 0; i < start_point - ender_index - 1; i++)
+	{
+		buffer[i] = buffer[ender_index + i + 1];
+	}
+}
+
+void ParameterAna(ONE_PARAMETER_TO_SEND *sptr)
+{
+	safe_buffer[sptr->type_of_frame] = sptr->value_of_frame;
+}
+
+void DataAna(DATA_POINTS_TO_SEND *sptr)
+{
+	memcpy(data_to_plot_buffer, &(sptr->data), sizeof(data_to_plot_buffer));
+}
+
+// Get a received data into buffer and analyze it.
+// buffer_receive : new data add into buffer.
+// length           : length of new data, count by [byte]
+void TranmittDataPointsAna(void *buffer_receive, uint32_t length)
+{
+	if (length + start_point < mybuffer_length)
+	{
+		memcpy(mybuffer + start_point, buffer_receive, length); // use memcpy for fast copy.
+		start_point += (length);									// update
+	}
+
+	uint32_t flag;
+	int ender_index_p;
+	int ender_index_d;
+	int index_p;
+	int index_d;
+	do
+	{
+		index_p = Find_Parameter_Header((void *)mybuffer, start_point, &ender_index_p);
+		index_d = Find_Data_Header((void *)mybuffer, start_point, &ender_index_d);
+
+		flag = (((uint32_t)(index_p != -1)) << 4) + (uint32_t)(index_d != -1);
+
+		switch (flag)
+		{
+		case 0x00:
+			break;
+		case 0x01:
+			DataAna((void *)&mybuffer[index_d]);
+			ClearFrameFromHeadTo(mybuffer, ender_index_d);
+			break;
+		case 0x10:
+			ParameterAna((void *)&mybuffer[index_p]);
+			ClearFrameFromHeadTo(mybuffer, ender_index_p);
+			break;
+		case 0x11:
+		{
+			if (index_p > index_d)
+			{
+				DataAna((void *)&mybuffer[index_d]);
+				ClearFrameFromHeadTo(mybuffer, ender_index_d);
+			}
+			else // index_p < index_d
+			{
+				ParameterAna((void *)&mybuffer[index_p]);
+				ClearFrameFromHeadTo(mybuffer, ender_index_p);
+			}
+		}
+		break;
+		}
+	} while (flag != 0U);
+}
+
+void LoadStruct(ONE_PARAMETER_TO_SEND *frame, enum TypesOfFrame type, float value)
+{
+	frame->para_frame_header = 0x4455;
+	frame->type_of_frame = type;
+	frame->value_of_frame = value;
+	frame->frame_tail = 0xAABB;
 }
