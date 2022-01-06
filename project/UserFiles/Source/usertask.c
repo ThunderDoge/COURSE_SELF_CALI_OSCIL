@@ -10,6 +10,7 @@
  */
 
 #include "usertask.h"
+#include "string.h"
 
 #define RESET_CALI_PENDING { safe_buffer_pending[CALI_ON_1V_SCALE]=0; safe_buffer_pending[CALI_ON_2V_SCALE]=0; safe_buffer_pending[CALI_ON_5V_SCALE]=0; safe_buffer_pending[CALI_ON_10V_SCALE]=0; }
 #define RESET_APPLY_BIAS_PENDING {safe_buffer_pending[APPLY_BIAS]=0;}
@@ -18,6 +19,7 @@
 ONE_PARAMETER_TO_SEND temp_frame;
 uint8_t cali_flag = 0;
 enum TypesOfFrame cali_scale = RMS_ON_10V_SCALE;
+uint8_t temp_buf[sizeof(DATA_POINTS_TO_SEND) + sizeof(ONE_PARAMETER_TO_SEND)];
 
 
 /**
@@ -87,11 +89,28 @@ void ADCHandleTaskFunction(void const *argument)
 				{
 					if(flag_in_calibration == 0)
 						{//非校准模式下发送波形
+                        /* JiangHaoDong Classic
 						adc_buffer_0[0] = 0xAA66;
 						adc_buffer_0[1] = ((int16_t*)(&GlobalWave.freq))[0];
 						adc_buffer_0[2] = ((int16_t*)(&GlobalWave.freq))[1];
 						adc_buffer_0[3] = ADC_BUFFER_SIZE;
 						ETH_SendData(ADC_BUFFER_SIZE + Intro_Size, adc_buffer_0, 0XAA66);
+                        */
+
+
+
+                        // Load data.
+						DATA_POINTS_TO_SEND* dptr = (void*)temp_buf;
+                        Data_Struct_Init(dptr);
+                        memcpy(&(dptr->data), adc_buffer_0, 1500);
+                        
+                        // Load parameter.
+                        ONE_PARAMETER_TO_SEND* pptr = (void*)(temp_buf + sizeof(DATA_POINTS_TO_SEND));
+                        Para_Struct_Init(pptr);
+                        LoadStruct(pptr, FREQ, GlobalWave.freq);
+
+                       ETH_SendData(sizeof(temp_buf)/2, temp_buf, 1U);
+
                     }
 					RegularMeasure(adc_buffer_0 + Intro_Size, ADC_BUFFER_SIZE, &GlobalConf, &TempWave);
 					if(flag_in_calibration == 1)
@@ -103,16 +122,30 @@ void ADCHandleTaskFunction(void const *argument)
 				else
 				{
 					if(flag_in_calibration == 0)
-					{
+					{//非校准模式下发送波形
+                        /*
 						adc_buffer_1[0] = 0xAA66;
 						adc_buffer_1[1] = ((int16_t*)(&GlobalWave.freq))[0];
 						adc_buffer_1[2] = ((int16_t*)(&GlobalWave.freq))[1];
 						adc_buffer_1[3] = ADC_BUFFER_SIZE;
 						ETH_SendData(ADC_BUFFER_SIZE + Intro_Size, adc_buffer_1, 0X5566);
+                        */
+                        
+                        // Load data.
+						DATA_POINTS_TO_SEND* dptr = (void*)temp_buf;
+                        Data_Struct_Init(dptr);
+                        memcpy(&(dptr->data), adc_buffer_0, 1500);
+
+                        // Load parameter.
+                        ONE_PARAMETER_TO_SEND* pptr = (void*)(temp_buf + sizeof(DATA_POINTS_TO_SEND));
+                        Para_Struct_Init(pptr);
+                        LoadStruct(pptr, FREQ, GlobalWave.freq);
+
+                       ETH_SendData(sizeof(temp_buf)/2, temp_buf, 1U);
 					}
                     RegularMeasure(adc_buffer_1 + Intro_Size, ADC_BUFFER_SIZE, &GlobalConf, &TempWave);
 					if(flag_in_calibration == 1)
-					{
+					{//校准模式下仅发送RMS和档位
 						LoadStruct(&temp_frame, cali_scale,  GlobalWave.RmS);
 						ETH_SendData(sizeof(temp_frame) /2 , &temp_frame, 0);
 					}

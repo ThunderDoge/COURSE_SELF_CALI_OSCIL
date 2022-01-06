@@ -18,6 +18,8 @@ enum TypesOfFrame
     APPLY_GAIN_2V,
     APPLY_GAIN_5V,
     APPLY_GAIN_10V,
+	
+	FREQ,
 
     // Lower to Upper
     RMS_ON_1V_SCALE,

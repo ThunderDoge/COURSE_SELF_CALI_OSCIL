@@ -1,6 +1,10 @@
 #include "tansmitt.h"
 #include "string.h"
+#ifdef STM32F407xx
+#define mybuffer_length 100
+#else
 #define mybuffer_length 10000
+#endif
 #define data_to_plot_buffer_length 1000
 
 uint16_t mybuffer[mybuffer_length];
