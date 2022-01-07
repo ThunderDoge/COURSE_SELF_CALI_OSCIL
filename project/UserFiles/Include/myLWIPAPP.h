@@ -66,6 +66,8 @@ void ETH_SendData(int16_t dataNum, void* data, uint16_t description);
 void tcp_server_connection_close(struct tcp_pcb *tpcb, struct tcp_server_struct *es);
 void tcp_server_close(struct tcp_pcb *tpcb);
 
+int ETH_isReadyToSendData(void);
+
 
  
 #endif

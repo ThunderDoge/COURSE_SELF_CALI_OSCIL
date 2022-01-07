@@ -238,9 +238,7 @@ void ETH_SendData(int16_t dataNum, void* data, uint16_t description)
 	return;
 }
 
-//void ETH_SendWaveData(int16_t dataNum, void* data)
-//{
-//	
-//}
-
-//end
+int ETH_isReadyToSendData(void)
+{
+    return ( ( tcp_server_flag & (1<<7) ) == 0 );
+}
