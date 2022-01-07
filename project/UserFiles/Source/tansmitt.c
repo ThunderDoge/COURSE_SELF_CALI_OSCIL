@@ -25,7 +25,7 @@ void Data_Struct_Init(DATA_POINTS_TO_SEND *Data)
 {
 	int i;
 	Data->data_frame_header = 0x5544;
-	for (i = 0; i < 1500; i++)
+	for (i = 0; i < DATA_POINTS_LEN; i++)
 	{
 		Data->data[i] = 0;
 	}
@@ -51,22 +51,28 @@ int Find_Parameter_Header(uint16_t *buffer, uint32_t length, int *ender_index)
 			break;
 		}
 	}
-	// Verify the frame tail.
-	ONE_PARAMETER_TO_SEND *sptr = (ONE_PARAMETER_TO_SEND *)(&buffer[para_head_result]);
-	if (sptr->frame_tail == 0XAABB)
+	if(para_head_result != -1)
 	{
-		*ender_index = ((uint16_t *)(&(sptr->frame_tail)) - (uint16_t *)buffer); // gives the distance between 2 pointer {header, buffer}.
-		if (*ender_index >= mybuffer_length)									 // check if ender_index is a exceeded access.
+		// Verify the frame tail.
+		ONE_PARAMETER_TO_SEND *sptr = (ONE_PARAMETER_TO_SEND *)(&buffer[para_head_result]);
+		if (sptr->frame_tail == 0XAABB)
+		{
+			*ender_index = ((uint16_t *)(&(sptr->frame_tail)) - (uint16_t *)buffer); // gives the distance between 2 pointer {header, buffer}.
+			if (*ender_index >= mybuffer_length)									 // check if ender_index is a exceeded access.
+			{
+				return -1;
+			}
+
+			return para_head_result;
+		}
+		else // ender error.
 		{
 			return -1;
 		}
-
-		return para_head_result;
 	}
-	else // ender error.
-	{
+	else
 		return -1;
-	}
+	
 }
 
 //  Find a valid frame of DATA_POINTS_TO_SEND.
@@ -78,7 +84,7 @@ int Find_Parameter_Header(uint16_t *buffer, uint32_t length, int *ender_index)
 int Find_Data_Header(uint16_t *buffer, uint32_t length, int *ender_index)
 {
 	int i;
-	int data_head_result = -2;
+	int data_head_result = -1;
 	// Find the header: 0x5544
 	for (i = 0; i < length; i++)
 	{
@@ -89,24 +95,28 @@ int Find_Data_Header(uint16_t *buffer, uint32_t length, int *ender_index)
 		}
 	}
 
-	// Verify the frame tail.
-	DATA_POINTS_TO_SEND *sptr = (DATA_POINTS_TO_SEND *)(&buffer[data_head_result]);
-	if (sptr->frame_tail == 0XAABB)
+	if(data_head_result != -1)
 	{
-		*ender_index = ((uint16_t *)(&(sptr->frame_tail)) - (uint16_t *)buffer); // gives the distance between 2 pointer {header, buffer}.
-		if (*ender_index >= mybuffer_length)									 // check if ender_index is a exceeded access.
+		// Verify the frame tail.
+		DATA_POINTS_TO_SEND *sptr = (DATA_POINTS_TO_SEND *)(&buffer[data_head_result]);
+		if (sptr->frame_tail == 0XAABB)
+		{
+			*ender_index = ((uint16_t *)(&(sptr->frame_tail)) - (uint16_t *)buffer); // gives the distance between 2 pointer {header, buffer}.
+			if (*ender_index >= mybuffer_length)									 // check if ender_index is a exceeded access.
+			{
+				return -1;
+			}
+
+			return data_head_result;
+		}
+		else // ender error.
 		{
 			return -1;
-		}
-
-		return data_head_result;
+		}	
 	}
-	else // ender error.
-	{
+	else 
 		return -1;
-	}
 }
-
 // move buffer[ender_index+1 ~ mybuffer_length] to head of mybuffer
 void ClearFrameFromHeadTo(uint16_t *buffer, int ender_index)
 {

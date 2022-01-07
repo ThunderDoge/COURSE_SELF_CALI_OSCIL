@@ -16,6 +16,8 @@
 #define RESET_APPLY_BIAS_PENDING {safe_buffer_pending[APPLY_BIAS]=0;}
 #define RESET_APPLY_GAIN_PENDING {safe_buffer_pending[APPLY_GAIN_1V]=0;safe_buffer_pending[APPLY_GAIN_2V]=0;safe_buffer_pending[APPLY_GAIN_5V]=0;safe_buffer_pending[APPLY_GAIN_10V]=0;}
 
+const int DEBUG_FLAG = 1;
+
 ONE_PARAMETER_TO_SEND temp_frame;
 uint8_t cali_flag = 0;
 enum TypesOfFrame cali_scale = RMS_ON_10V_SCALE;
@@ -102,7 +104,18 @@ void ADCHandleTaskFunction(void const *argument)
                         // Load data.
 						DATA_POINTS_TO_SEND* dptr = (void*)temp_buf;
                         Data_Struct_Init(dptr);
-                        memcpy(&(dptr->data), adc_buffer_0, 1500);
+                        if (DEBUG_FLAG)
+                        {
+                            for (int i = 0; i < DATA_POINTS_LEN; i++)     // DATA_POINTS_LEN == size data[]
+                            {
+                                dptr->data[i] = i+1000;
+                            }
+                            
+                        }
+                        else
+                        {
+                            memcpy(&(dptr->data), adc_buffer_0, DATA_POINTS_LEN*sizeof(uint16_t));
+                        }
                         
                         // Load parameter.
                         ONE_PARAMETER_TO_SEND* pptr = (void*)(temp_buf + sizeof(DATA_POINTS_TO_SEND));
@@ -134,7 +147,18 @@ void ADCHandleTaskFunction(void const *argument)
                         // Load data.
 						DATA_POINTS_TO_SEND* dptr = (void*)temp_buf;
                         Data_Struct_Init(dptr);
-                        memcpy(&(dptr->data), adc_buffer_0, 1500);
+                        if (DEBUG_FLAG)
+                        {
+                            for (int i = 0; i < DATA_POINTS_LEN; i++)     // DATA_POINTS_LEN == size data[]
+                            {
+                                dptr->data[i] = i+2000;
+                            }
+                            
+                        }
+                        else
+                        {
+                            memcpy(&(dptr->data), adc_buffer_0, DATA_POINTS_LEN*sizeof(uint16_t));
+                        }
 
                         // Load parameter.
                         ONE_PARAMETER_TO_SEND* pptr = (void*)(temp_buf + sizeof(DATA_POINTS_TO_SEND));

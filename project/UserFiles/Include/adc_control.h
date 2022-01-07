@@ -135,7 +135,7 @@ typedef enum glv
 
 // USER DEFINES
 #define Intro_Size 4
-#define ADC_BUFFER_SIZE 1000
+#define ADC_BUFFER_SIZE 1500
 #define TRIGGER_TIM htim2
 
 // Global variables.

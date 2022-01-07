@@ -3,23 +3,34 @@
 
 #include "stdint.h"
 
+#define DATA_POINTS_LEN 1000
+
+//#if DATA_POINTS_LEN > ADC_BUFFER_SIZE
+//    #error DATA TO SEND is larger than data source: ADC buffer
+//#endif
+
 enum TypesOfFrame
 {
     // Upper to Lower
-    START_ALL_SCALE_CALI,   // ?�?�?�?�?????�???
+    START_ALL_SCALE_CALI,   //
+    END_CALI,
     CALI_ON_1V_SCALE,
     CALI_ON_2V_SCALE,
     CALI_ON_5V_SCALE,
     CALI_ON_10V_SCALE,
 
-    APPLY_BIAS_1V_SCALE,
-
-    APPLY_GAIN_1V,
+    APPLY_GAIN_1V,      // gain
     APPLY_GAIN_2V,
     APPLY_GAIN_5V,
     APPLY_GAIN_10V,
 	
 	FREQ,
+
+    APPLY_BIAS_1V,      // offset 
+    APPLY_BIAS_2V,
+    APPLY_BIAS_5V,
+    APPLY_BIAS_10V,
+
 
     // Lower to Upper
     RMS_ON_1V_SCALE,
@@ -43,7 +54,7 @@ typedef struct
 typedef struct  
 {
 	uint16_t data_frame_header;
-	uint16_t data[1500];
+	uint16_t data[DATA_POINTS_LEN];
 	uint16_t frame_tail;
 }DATA_POINTS_TO_SEND;
 
