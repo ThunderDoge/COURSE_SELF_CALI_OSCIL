@@ -76,7 +76,8 @@ void LcdDisplayParam(void)
         else
             sprintf(cali, "NO       ");
         
-        taskENTER_CRITICAL();
+//        taskENTER_CRITICAL();
+		vTaskSuspendAll();
         LCD_ShowString(150, 60,  200, 16, 16,    max );
         LCD_ShowString(150, 80,  200, 16, 16,    min );
         LCD_ShowString(150, 100, 200, 16, 16,    rms );
@@ -84,7 +85,8 @@ void LcdDisplayParam(void)
         LCD_ShowString(150, 140, 200, 16, 16,    freq );
         LCD_ShowString(150, 160, 200, 16, 16,    cali );
 
-        taskEXIT_CRITICAL();
+//        taskEXIT_CRITICAL();
+		xTaskResumeAll();
         osDelay(100);
     }
     
