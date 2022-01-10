@@ -5,11 +5,13 @@
 #else
 #define mybuffer_length 10000
 #endif
-#define data_to_plot_buffer_length 1000
+#define data_to_plot_buffer_length 500
 
 uint16_t mybuffer[mybuffer_length];
 
 float safe_buffer[CMD_SEQUENCE_ERR + 1];
+int safe_buffer_pending[CMD_SEQUENCE_ERR + 1];
+int data_pending;
 uint16_t data_to_plot_buffer[data_to_plot_buffer_length];
 int start_point = 0; //index of first free location
 
@@ -130,11 +132,13 @@ void ClearFrameFromHeadTo(uint16_t *buffer, int ender_index)
 void ParameterAna(ONE_PARAMETER_TO_SEND *sptr)
 {
 	safe_buffer[sptr->type_of_frame] = sptr->value_of_frame;
+    safe_buffer_pending[sptr->type_of_frame] = 1;
 }
 
 void DataAna(DATA_POINTS_TO_SEND *sptr)
 {
 	memcpy(data_to_plot_buffer, &(sptr->data), sizeof(data_to_plot_buffer));
+    data_pending = 1;
 }
 
 // Get a received data into buffer and analyze it.

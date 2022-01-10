@@ -15,3 +15,4 @@
 *.scvd
 *.lst
 *.zore
+/doc/*.docx
