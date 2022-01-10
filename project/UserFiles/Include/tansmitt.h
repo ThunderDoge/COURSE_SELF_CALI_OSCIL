@@ -3,7 +3,7 @@
 
 #include "stdint.h"
 
-#define DATA_POINTS_LEN 1000
+#define DATA_POINTS_LEN 500
 
 //#if DATA_POINTS_LEN > ADC_BUFFER_SIZE
 //    #error DATA TO SEND is larger than data source: ADC buffer

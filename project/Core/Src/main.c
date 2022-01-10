@@ -207,7 +207,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 			{
 				GlobalWave.caliFreqStruct.shortTimeNum = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
 				GlobalWave.period = GlobalWave.caliFreqStruct.shortTimeNum + (((uint32_t)GlobalWave.caliFreqStruct.longTimeNum-1) << 16);
-				GlobalWave.freq = 2000000.0f/GlobalWave.period;
+				GlobalWave.freq = 8000000.0f/GlobalWave.period;
 				GlobalWave.caliFreqStruct.longTimeNum = 0;
 				GlobalWave.caliFreqStruct.shortTimeNum = 0;
 			}

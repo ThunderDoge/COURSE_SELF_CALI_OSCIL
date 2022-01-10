@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${default}",
+                "${workspaceFolder}/project/Core/Inc",
+                "${workspaceFolder}/project/UserFiles/SystemView/Sample/FreeRTOSV10",
+                "${workspaceFolder}/project/LWIP/App",
+                "${workspaceFolder}/project/UserFiles/LwIP_UDPTCP_Echo_Server_Netconn_RTOS/Inc",
+                "${workspaceFolder}/project/UserFiles/Include",
+                "${workspaceFolder}/project/LWIP/Target",
+                "${workspaceFolder}/project/UserFiles/SystemView/SEGGER",
+                "${workspaceFolder}/project/UserFiles/SystemView/Config"
+            ],
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++14"
+        }
+    ],
+    "version": 4
+}

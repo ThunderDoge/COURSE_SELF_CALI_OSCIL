@@ -56,6 +56,9 @@ void LcdDisplayParam(void)
     LCD_ShowString(30, 120, 200, 16, 16, "AVG = ");
     LCD_ShowString(30, 140, 200, 16, 16, "FREQ = ");
     LCD_ShowString(30, 160, 200, 16, 16, "IN CALI ");
+    LCD_ShowString(30, 180, 200, 16, 16, "SCALE ");
+    LCD_ShowString(30, 200, 200, 16, 16, "SAMP FREQ");
+    LCD_ShowString(30, 220, 200, 16, 16, "IS AUTO FREQ");
 
     char max[30];
     char min[30];
@@ -63,6 +66,11 @@ void LcdDisplayParam(void)
     char avg[30];
     char freq[30];
     char cali[30];
+    char scl[30];
+    char sa_freq[30];
+    char is_autofreq[30];
+    char samp_val[30];
+    
 
     while (1)
     {
@@ -71,10 +79,31 @@ void LcdDisplayParam(void)
         sprintf(rms,    "%+#10.4f",    GlobalWave.RmS);
         sprintf(avg,    "%+#10.4f",    GlobalWave.average);
         sprintf(freq,   "%+#10.4f",    GlobalWave.freq);
+        sprintf(samp_val,   "%4d",    HAL_ADC_GetValue(&hadc1));
+
         if(flag_in_calibration)
             sprintf(cali, "YES      ");
         else
             sprintf(cali, "NO       ");
+
+        sprintf(sa_freq, "%d",          GlobalConf.sampling_freq_kHz);
+
+        switch (GlobalConf.gain_level)
+        {
+            case Gain_10x   :   sprintf(scl, "Gain_10x"); break;
+            case Gain_1x    :   sprintf(scl, "Gain_1x"); break;
+            case Gain_2x    :   sprintf(scl, "Gain_2x"); break;
+            case Gain_5x    :   sprintf(scl, "Gain_5x"); break;
+        default:
+            sprintf(scl, "BAD PARAM");
+            break;
+        }
+
+        if(GlobalConf.freq_Autoflag)
+            sprintf(is_autofreq, "YES      ");
+        else
+            sprintf(is_autofreq, "NO       ");
+
         
 //        taskENTER_CRITICAL();
 		vTaskSuspendAll();
@@ -84,6 +113,10 @@ void LcdDisplayParam(void)
         LCD_ShowString(150, 120, 200, 16, 16,    avg );
         LCD_ShowString(150, 140, 200, 16, 16,    freq );
         LCD_ShowString(150, 160, 200, 16, 16,    cali );
+        LCD_ShowString(150, 180, 200, 16, 16,    scl );
+        LCD_ShowString(150, 200, 200, 16, 16,    sa_freq );
+        LCD_ShowString(150, 220, 200, 16, 16,    is_autofreq );
+        LCD_ShowString(150, 240, 200, 16, 16,    samp_val );
 
 //        taskEXIT_CRITICAL();
 		xTaskResumeAll();
@@ -132,7 +165,16 @@ void LcdVertical(void)
             LCD_Fill(150, 380, 350, 400, GREEN); // Clear selection line.
             break;
         case KEY_1_PRES:
-            ConfigGain(selection_number - 1);
+            switch (selection_number)
+            {
+            case  1  :   ConfigGain(Gain_10x);   break;
+            case  2  :   ConfigGain(Gain_1x);    break;
+            case  4  :   ConfigGain(Gain_2x);    break;
+            case  3  :   ConfigGain(Gain_5x);    break;
+            
+            default:
+                break;
+            }
             LCD_ShowString(150, 400, 200, 16, 16, "APPLYED");
             break;
         case KEY_2_PRES:

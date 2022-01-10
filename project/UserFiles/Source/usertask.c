@@ -138,7 +138,7 @@ void ADCHandleTaskFunction(void const *argument)
                             ETH_SendData(sizeof(temp_buf) / 2, temp_buf, 1U);
                         }
                     }
-                    RegularMeasure(adc_buffer_0 + Intro_Size, ADC_BUFFER_SIZE, &GlobalConf, &TempWave);
+                    RegularMeasure(adc_buffer_0 + Intro_Size, ADC_BUFFER_SIZE, &GlobalConf, &GlobalWave);
                     if (flag_in_calibration == 1)
                     { //校准模式下仅发送RMS和档位
                         if (ETH_isReadyToSendData())
@@ -184,7 +184,7 @@ void ADCHandleTaskFunction(void const *argument)
                             ETH_SendData(sizeof(temp_buf) / 2, temp_buf, 1U);
                         }
                     }
-                    RegularMeasure(adc_buffer_1 + Intro_Size, ADC_BUFFER_SIZE, &GlobalConf, &TempWave);
+                    RegularMeasure(adc_buffer_1 + Intro_Size, ADC_BUFFER_SIZE, &GlobalConf, &GlobalWave);
                     if (flag_in_calibration == 1)
                     { //校准模式下仅发送RMS和档位
                         if (ETH_isReadyToSendData())
@@ -202,12 +202,12 @@ void ADCHandleTaskFunction(void const *argument)
                 //                    }
                 //                }
                 //                else
-                {
-                    if (FeedRegularSlidingBuffer(&TempWave, &wave_buffer))
-                    {
-                        GetRegularSlidingOutput(&GlobalWave, &wave_buffer);
-                    }
-                }
+                // {
+                //     if (FeedRegularSlidingBuffer(&TempWave, &wave_buffer))
+                //     {
+                //         GetRegularSlidingOutput(&GlobalWave, &wave_buffer);
+                //     }
+                // }
 
                 flag_adc_buffer_processing[i] = 0;
                 flag_adc_buffer_ready[i] = 0;

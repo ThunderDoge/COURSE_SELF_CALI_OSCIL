@@ -34,7 +34,8 @@
         "adc_control.h": "c",
         "stm32f4xx_hal.h": "c",
         "limits": "c",
-        "type_traits": "c"
+        "type_traits": "c",
+        "*.tcc": "c"
     },
     "git.ignoreLimitWarning": true
 }

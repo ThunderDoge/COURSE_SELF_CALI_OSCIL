@@ -5,6 +5,10 @@
 // User Global Variale
 uint32_t buffer_blocked_count = 0;
 
+int watch1;
+int watch2;
+
+
 // Global config & statistic storage.
 WaveformStats GlobalWave;
 WaveformStats TempWave;
@@ -38,10 +42,36 @@ uint16_t SampFreqLvlToDivNumber[10] =
         2,
         1};
 
-float GainLvlToRange[4] = {10.0f, 1.0f, 2.0f, 5.0f};
-
 float RmS_RawWaveform(uint16_t *pbuffer, uint32_t start_index, uint32_t end_index, WaveMeasureConfig_t *conf);
 void InitializeWaveformSlidingBuffer(WaveformSlidingBuffer *buffer);
+
+// #define BIAS_TO_INTEGER_BIAS(bias_volt,gain_lvl) (bias_volt  / GainLvlToRange(gain_lvl) * ADC_HALF_RANGE )
+// #define FACTOR_SAMP_VAL_TO_VOLT(gain_lvl,gain_offset) ((GainLvlToRange(gain_lvl) / ADC_HALF_RANGE) * (1.0f + gain_offset))
+
+float GainLvlToRange(GainLevel_t lvl)
+{
+    switch (lvl)
+    {
+        case Gain_10x   :   return  1.0f;
+        case Gain_1x    :   return  10.0f;
+        case Gain_2x    :   return  5.0f;
+        case Gain_5x    :   return  2.0f;
+    default:
+        return -1;
+        break;
+    }
+}
+
+int BIAS_TO_INTEGER_BIAS(float bias_volt, GainLevel_t gain_lvl)
+{
+	return (int)(bias_volt / GainLvlToRange(gain_lvl) * ADC_HALF_RANGE);
+}
+
+float FACTOR_SAMP_VAL_TO_VOLT(GainLevel_t gain_lvl,float gain_offset)
+{
+    return GainLvlToRange(gain_lvl) / ADC_HALF_RANGE * (1.0f + gain_offset);
+}
+
 
 void InitializeWaveformStats(WaveformStats *wave)
 {
@@ -157,10 +187,36 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
     }
 }
 
+/**
+ * @brief  Config Gain
+ * @details  This function table is verified at 2022/1/10 by ThunderDoge
+ * @param[in]  selection_number: one of Gain_10x, Gain_1x, Gain_2x, Gain_5x
+ * @retval  
+ */
 void ConfigGain(GainLevel_t selection_number)
 {
-    HAL_GPIO_WritePin(PORT_GAIN_A_GPIO_Port, PORT_GAIN_A_Pin, ((selection_number & 0x1) ? GPIO_PIN_SET : GPIO_PIN_RESET));
-    HAL_GPIO_WritePin(PORT_GAIN_B_GPIO_Port, PORT_GAIN_B_Pin, ((selection_number & 0x2) ? GPIO_PIN_SET : GPIO_PIN_RESET));
+    switch (selection_number)
+    {
+        case Gain_10x   :
+            HAL_GPIO_WritePin(PORT_GAIN_A_GPIO_Port, PORT_GAIN_A_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(PORT_GAIN_B_GPIO_Port, PORT_GAIN_B_Pin, GPIO_PIN_RESET);
+            break;
+        case Gain_1x    :
+            HAL_GPIO_WritePin(PORT_GAIN_A_GPIO_Port, PORT_GAIN_A_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(PORT_GAIN_B_GPIO_Port, PORT_GAIN_B_Pin, GPIO_PIN_RESET);
+            break;
+        case Gain_2x    :
+            HAL_GPIO_WritePin(PORT_GAIN_A_GPIO_Port, PORT_GAIN_A_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(PORT_GAIN_B_GPIO_Port, PORT_GAIN_B_Pin, GPIO_PIN_SET);
+            break;
+        case Gain_5x    :
+            HAL_GPIO_WritePin(PORT_GAIN_A_GPIO_Port, PORT_GAIN_A_Pin, GPIO_PIN_RESET);    
+            HAL_GPIO_WritePin(PORT_GAIN_B_GPIO_Port, PORT_GAIN_B_Pin, GPIO_PIN_SET);
+            break;
+
+    default:
+        break;
+    }
     GlobalConf.gain_level = (GainLevel_t)selection_number;
     InitializeWaveformSlidingBuffer(&wave_buffer);
 }
@@ -191,7 +247,7 @@ void ConfigFreqDiv(uint16_t freq_kHz)
 
 /**
  * @brief  Set trigger timer freq 1MHz div by ?
- * @details  
+ * @details  by foubinjiang
  * @param[in]  
  * @retval  
  */
@@ -218,24 +274,26 @@ float RmS_FixedWaveform(uint16_t *pbuffer, uint32_t start_index, uint32_t end_in
 {
     float result;
 
-    uint32_t sum_of_sqr = 0;
+    uint64_t sum_of_sqr = 0;
 
+    // sum of squares. (integer)
     for (size_t i = start_index; i <= end_index; i++)
     {
-        int v = pbuffer[i] - 2047;
+        int v = pbuffer[i] - ADC_MID;
         sum_of_sqr += v * v;
     }
 
     int cnt = end_index - start_index;
-
+    // Mean of Squares.
     float mean = sum_of_sqr / (cnt > 0 ? cnt : 1);
-
+    // Root of Mean.
     return result = sqrt(mean);
 }
 
+
 /**
  * @brief  Calculate RmS with RAW data, need offsets infomation.
- * @details  
+ * @details  // fixed ADC_RANGE at 2022/1/10 by Thunderdoge
  * @param[in]  pbuffer      data buffer
  * @param[in]  start_index  start on pbuffer[start_index]
  * @param[in]  end_index    end on pbuffer[end_index]
@@ -245,16 +303,19 @@ float RmS_RawWaveform(uint16_t *pbuffer, uint32_t start_index, uint32_t end_inde
 {
     float result;
 
-    uint32_t sum_of_sqr = 0;
-
-    int integer_bias = conf->offset.bias * 4095 / GainLvlToRange[(uint32_t)conf->gain_level];
-    float gain = (1.0f + conf->offset.gain) * GainLvlToRange[(uint32_t)conf->gain_level] / 4096.0f;
+    uint64_t sum_of_sqr = 0;
+    // int integer_bias = conf->offset.bias * ADC_RANGE / GainLvlToRange(conf->gain_level);
+    int integer_bias = BIAS_TO_INTEGER_BIAS((conf->offset.bias), (conf->gain_level));
+    // float gain = (1.0f + conf->offset.gain) * GainLvlToRange(conf->gain_level) / ADC_RANGE;
+    float gain = FACTOR_SAMP_VAL_TO_VOLT((conf->gain_level), (conf->offset.gain));
 
     // get sum of squares (bias substracted)
     for (size_t i = start_index; i <= end_index; i++)
     {
-        int v = pbuffer[i] - 2047 - integer_bias;
+        int v = pbuffer[i] - ADC_MID - integer_bias;
         sum_of_sqr += v * v;
+        watch1 = sum_of_sqr;
+        watch2 = v;
     }
 
     int cnt = end_index - start_index;
@@ -275,15 +336,16 @@ float Average_RawWaveformRawWaveform(uint16_t *pbuffer, uint32_t start_index, ui
 {
     float result;
 
-    int integer_bias = conf->offset.bias * 4095 / GainLvlToRange[(uint32_t)conf->gain_level];
-    float scale = GainLvlToRange[(uint32_t)conf->gain_level];
-    float gain = (1.0f + conf->offset.gain) * scale / 4096.0f;
+    // int integer_bias = conf->offset.bias * ADC_RANGE / GainLvlToRange(conf->gain_level);
+    int integer_bias = BIAS_TO_INTEGER_BIAS((conf->offset.bias), (conf->gain_level));
+    // float gain = (1.0f + conf->offset.gain) * GainLvlToRange(conf->gain_level) / ADC_RANGE;
+    float gain = FACTOR_SAMP_VAL_TO_VOLT((conf->gain_level), (conf->offset.gain));
 
-    int sum = 0;
+    long long sum = 0;
 
     for (size_t i = start_index; i <= end_index; i++)
     {
-        int v = pbuffer[i] - 2047 - integer_bias;
+        int v = pbuffer[i] - ADC_MID - integer_bias;
         sum += v;
     }
 
@@ -298,6 +360,9 @@ float Average_RawWaveformRawWaveform(uint16_t *pbuffer, uint32_t start_index, ui
     return result;
 }
 
+int sampled_max;
+int sampled_min;
+
 /**
  * @brief  Analyze the waveform and write statistic to the stucture;
  * @details  
@@ -306,9 +371,9 @@ float Average_RawWaveformRawWaveform(uint16_t *pbuffer, uint32_t start_index, ui
  */
 void WaveformDataAnalyze(uint16_t *pbuffer, uint32_t buf_length, WaveformStats *wave, WaveMeasureConfig_t *config)
 {
-    int sampled_max = 0;
-    int sampled_min = 4096;
-
+	sampled_max = 0;
+	sampled_min = 4096;
+	
     for (uint32_t i = 3; i < buf_length; i++) // find min and max;
     {
         if (pbuffer[i] > sampled_max)
@@ -374,7 +439,7 @@ void WaveformDataAnalyze(uint16_t *pbuffer, uint32_t buf_length, WaveformStats *
 
     // data validation - evaluation condition ->
 
-    InitializeWaveformStats(wave);
+    // InitializeWaveformStats(wave);
 
 //    if (cnt_of_risedge > TOO_MANY_EDGES_CRITERIA)
 //        wave->Evalue.FAST = 1;
@@ -414,7 +479,7 @@ void WaveformDataAnalyze(uint16_t *pbuffer, uint32_t buf_length, WaveformStats *
 
     // wave type.
 
-    if (wave->freq <= 100)
+    if (wave->freq <= 10)
     {
         wave->ACDCType = DC;
     }
@@ -425,19 +490,28 @@ void WaveformDataAnalyze(uint16_t *pbuffer, uint32_t buf_length, WaveformStats *
 
     // statistics.
 
-    int integer_bias = config->offset.bias * 4095 / GainLvlToRange[(uint32_t)config->gain_level];
+    // int integer_bias = config->offset.bias * ADC_RANGE / GainLvlToRange(conf->gain_level);
     //    float gain = (1.0f + config->offset.gain) * GainLvlToRange[(uint32_t)config->gain_level];
 
     // WARNING: the compiler MAY interpreter '*' in '* GainLvlToRange[config->gain_level]' into 'unpointerlize' rather than 'multiplate'.
     // so I have to do this to avoid ambiguousness.
     // FXXKING COMPILER.
+
+    /*
     float scale = (float)GainLvlToRange[(uint32_t)config->gain_level];
     float gain_offset = (1.0f + config->offset.gain);
 
     wave->maximum = (sampled_max - 2047 - integer_bias) * scale * gain_offset / 4096.0f;
     //    wave->minimum = (float)(sampled_min - 2047 - integer_bias) * GainLvlToRange[(uint32_t)config->gain_level] * (1.0f + config->offset.gain) / 4096.0f;
     wave->minimum = (sampled_min - 2047 - integer_bias) * scale * gain_offset / 4096.0f;
+
+
     //BIG wave form statistics:
+
+    */
+    wave->maximum = (sampled_max - BIAS_TO_INTEGER_BIAS((config->offset.bias),(config->gain_level)) - ADC_MID ) * FACTOR_SAMP_VAL_TO_VOLT((config->gain_level),(config->offset.gain));
+    wave->minimum = (sampled_min - BIAS_TO_INTEGER_BIAS((config->offset.bias),(config->gain_level)) - ADC_MID) * FACTOR_SAMP_VAL_TO_VOLT((config->gain_level),(config->offset.gain));
+   
     if (first_edging_index == -1 || last_edging_index == -1)
     {
         first_edging_index = 0;
@@ -472,6 +546,8 @@ int RegularMeasure(uint16_t *buffer, uint32_t buf_length, WaveMeasureConfig_t *c
 
 #define LOOP_NEXT(i, max) (i + 1 > max ? 0 : i + 1)
 #define LOOP_PREV(i, max) (i == 0 ? max : i - 1)
+uint32_t n;
+uint32_t n_1;
 
 /**
  * @brief  Feed Sliding buffer. Get average value.
@@ -490,7 +566,7 @@ int FeedRegularSlidingBuffer(WaveformStats *wave, WaveformSlidingBuffer *buffer)
         buffer->queue_count++;
     }
 
-    uint32_t n = buffer->next_position;
+    n = buffer->next_position;
     {
         buffer->output.maximum += buffer->wave_buf[n].maximum;
         buffer->output.minimum += buffer->wave_buf[n].minimum;
@@ -502,7 +578,7 @@ int FeedRegularSlidingBuffer(WaveformStats *wave, WaveformSlidingBuffer *buffer)
 
     if (buffer->queue_count == WAVE_SLIDE_LENGTH)
     {
-        uint32_t n_1 = LOOP_PREV((buffer->next_position), (WAVE_SLIDE_LENGTH - 1));
+        n_1 = LOOP_PREV((buffer->next_position), (WAVE_SLIDE_LENGTH - 1));
         buffer->output.maximum -= buffer->wave_buf[n_1].maximum;
         buffer->output.minimum -= buffer->wave_buf[n_1].minimum;
         buffer->output.edges -= buffer->wave_buf[n_1].edges;

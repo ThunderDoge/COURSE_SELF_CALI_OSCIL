@@ -17,10 +17,19 @@
 #include "tim.h"
 #include "stm32f4xx_hal_tim.h"
 
+#define ADC_UPBOUND 3800
+#define ADC_LOWBOUND 0
+#define ADC_MID ((ADC_UPBOUND+ADC_LOWBOUND)/2)
+#define ADC_RANGE (ADC_UPBOUND - ADC_LOWBOUND)
+#define ADC_HALF_RANGE (ADC_UPBOUND - ADC_MID)
+
+//#define BIAS_TO_INTEGER_BIAS(bias_volt,gain_lvl) (bias_volt  / GainLvlToRange(gain_lvl) * ADC_HALF_RANGE )
+//#define FACTOR_SAMP_VAL_TO_VOLT(gain_lvl,gain_offset) ((GainLvlToRange(gain_lvl) / ADC_HALF_RANGE) * (1.0f + gain_offset))
+
 #define TOO_MANY_EDGES_CRITERIA 40
 #define TOO_LESS_EDGES_CRITERIA 5
-#define HIGH_VALUE_CRITERIA 3800
-#define LOW_VALUE_EDGES_CRITERIA 300
+#define HIGH_VALUE_CRITERIA ADC_UPBOUND-100
+#define LOW_VALUE_EDGES_CRITERIA ADC_LOWBOUND+100
 #define STALL_SCALE_CRITERIA 2047
 #define WAVE_SLIDE_LENGTH 10
 typedef enum GainLevel_e { 
@@ -124,14 +133,6 @@ typedef struct ct
     WaveMeasureConfig_t conf;
     WaveformStats wave;
 }CalibrationTickit;
-
-typedef enum glv
-{
-	gain10x = 0,
-	gain5x = 2,
-	gain2x = 3,
-	gain1x = 1,
-}gainLvType;
 
 // USER DEFINES
 #define Intro_Size 4

@@ -120,6 +120,7 @@ int Find_Data_Header(uint16_t *buffer, uint32_t length, int *ender_index)
 // move buffer[ender_index+1 ~ mybuffer_length] to head of mybuffer
 void ClearFrameFromHeadTo(uint16_t *buffer, int ender_index)
 {
+	memset(buffer, 0, sizeof(*buffer) * ender_index);
 	for (int i = 0; i < start_point - ender_index - 1; i++)
 	{
 		buffer[i] = buffer[ender_index + i + 1];
@@ -162,14 +163,17 @@ void TranmittDataPointsAna(void *buffer_receive, uint32_t length)
 		switch (flag)
 		{
 		case 0x00:
+			start_point = 0;
 			break;
 		case 0x01:
 			DataAna((void *)&mybuffer[index_d]);
 			ClearFrameFromHeadTo(mybuffer, ender_index_d);
+			start_point -= ender_index_d;
 			break;
 		case 0x10:
 			ParameterAna((void *)&mybuffer[index_p]);
 			ClearFrameFromHeadTo(mybuffer, ender_index_p);
+			start_point -= ender_index_p;
 			break;
 		case 0x11:
 		{
@@ -177,11 +181,13 @@ void TranmittDataPointsAna(void *buffer_receive, uint32_t length)
 			{
 				DataAna((void *)&mybuffer[index_d]);
 				ClearFrameFromHeadTo(mybuffer, ender_index_d);
+				start_point -= ender_index_d;
 			}
 			else // index_p < index_d
 			{
 				ParameterAna((void *)&mybuffer[index_p]);
 				ClearFrameFromHeadTo(mybuffer, ender_index_p);
+				start_point -= ender_index_p;
 			}
 		}
 		break;
