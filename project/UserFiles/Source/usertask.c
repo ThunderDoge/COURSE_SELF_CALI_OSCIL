@@ -19,9 +19,12 @@
         safe_buffer_pending[CALI_ON_5V_SCALE] = 0;  \
         safe_buffer_pending[CALI_ON_10V_SCALE] = 0; \
     }
-#define RESET_APPLY_BIAS_PENDING             \
-    {                                        \
-        safe_buffer_pending[APPLY_BIAS] = 0; \
+#define RESET_APPLY_BIAS_PENDING                 \
+    {                                            \
+        safe_buffer_pending[APPLY_BIAS_1V] = 0;  \
+        safe_buffer_pending[APPLY_BIAS_2V] = 0;  \
+        safe_buffer_pending[APPLY_BIAS_5V] = 0;  \
+        safe_buffer_pending[APPLY_BIAS_10V] = 0; \
     }
 #define RESET_APPLY_GAIN_PENDING                 \
     {                                            \
@@ -63,6 +66,31 @@ void ADCHandleTaskFunction(void const *argument)
 
     for (;;)
     {
+        		for(int i=0; i<=END_OF_TypesOfFrame; i++)
+        		{
+        			if( safe_buffer_pending[i] )
+        			{
+        				switch(i)
+        				{
+        					case CALI_ON_1V_SCALE   : RequestCalibration(Gain_10x, CaliBias);   cali_scale = RMS_ON_1V_SCALE;   RESET_CALI_PENDING; break;
+        					case CALI_ON_2V_SCALE   : RequestCalibration(Gain_5x,  CaliBias);   cali_scale = RMS_ON_2V_SCALE;   RESET_CALI_PENDING; break;
+        					case CALI_ON_5V_SCALE   : RequestCalibration(Gain_2x,  CaliBias);   cali_scale = RMS_ON_5V_SCALE;   RESET_CALI_PENDING; break;
+        					case CALI_ON_10V_SCALE  : RequestCalibration(Gain_1x,  CaliBias);   cali_scale = RMS_ON_10V_SCALE;  RESET_CALI_PENDING; break;
+							
+							case APPLY_BIAS_1V		: GlobalConf.offset.bias = safe_buffer[APPLY_BIAS_1V]; 		cali_scale = APPLY_BIAS_1V;		RESET_APPLY_BIAS_PENDING;	break;
+							case APPLY_BIAS_2V		: GlobalConf.offset.bias = safe_buffer[APPLY_BIAS_2V]; 		cali_scale = APPLY_BIAS_2V;		RESET_APPLY_BIAS_PENDING;	break;
+							case APPLY_BIAS_5V		: GlobalConf.offset.bias = safe_buffer[APPLY_BIAS_5V]; 		cali_scale = APPLY_BIAS_5V;		RESET_APPLY_BIAS_PENDING;	break;
+							case APPLY_BIAS_10V		: GlobalConf.offset.bias = safe_buffer[APPLY_BIAS_10V];		cali_scale = APPLY_BIAS_10V;	RESET_APPLY_BIAS_PENDING;	break;
+
+        					case APPLY_GAIN_1V      : GlobalConf.offset.gain = safe_buffer[APPLY_GAIN_1V];      cali_scale = APPLY_GAIN_1V;    RESET_APPLY_GAIN_PENDING; break;
+        					case APPLY_GAIN_2V      : GlobalConf.offset.gain = safe_buffer[APPLY_GAIN_2V];      cali_scale = APPLY_GAIN_2V;    RESET_APPLY_GAIN_PENDING; break;
+        					case APPLY_GAIN_5V      : GlobalConf.offset.gain = safe_buffer[APPLY_GAIN_5V];      cali_scale = APPLY_GAIN_5V;    RESET_APPLY_GAIN_PENDING; break;
+        					case APPLY_GAIN_10V     : GlobalConf.offset.gain = safe_buffer[APPLY_GAIN_10V];     cali_scale = APPLY_GAIN_10V;   RESET_APPLY_GAIN_PENDING; break;
+                            case END_CALI           : ResetCalibration();safe_buffer_pending[END_CALI] = 0; break;
+        					default:	break;
+        				}
+        			}
+                }
         for (size_t i = 0; i < 2; i++)
         {
             if (flag_adc_buffer_ready[i])
@@ -260,15 +288,6 @@ void UIHandleTaskFunction(void const *argument)
 */
 void LwIPHandleTaskFunction(void const *argument)
 {
-
-    //	while(1)
-    //	{
-    //		if(myLWIPStatus == 1)
-    //		{
-    //
-    //			break;
-    //		}
-    //	}
 
     /* Infinite loop */
     for (;;)

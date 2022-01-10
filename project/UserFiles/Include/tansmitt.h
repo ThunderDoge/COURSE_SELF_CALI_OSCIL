@@ -38,7 +38,9 @@ enum TypesOfFrame
     RMS_ON_5V_SCALE,
     RMS_ON_10V_SCALE,
 
-    CMD_SEQUENCE_ERR
+    CMD_SEQUENCE_ERR,
+
+    END_OF_TypesOfFrame
 };
 
 typedef struct 
@@ -60,6 +62,10 @@ typedef struct
 
 extern ONE_PARAMETER_TO_SEND Parameter;
 extern DATA_POINTS_TO_SEND Data;
+
+extern int safe_buffer_pending[CMD_SEQUENCE_ERR + 1];
+extern float safe_buffer[CMD_SEQUENCE_ERR + 1];
+
 
 
 void Para_Struct_Init(ONE_PARAMETER_TO_SEND* s);

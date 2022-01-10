@@ -12,6 +12,7 @@ uint16_t mybuffer[mybuffer_length];
 float safe_buffer[CMD_SEQUENCE_ERR + 1];
 int safe_buffer_pending[CMD_SEQUENCE_ERR + 1];
 int data_pending;
+
 uint16_t data_to_plot_buffer[data_to_plot_buffer_length];
 int start_point = 0; //index of first free location
 
@@ -123,9 +124,9 @@ int Find_Data_Header(uint16_t *buffer, uint32_t length, int *ender_index)
 void ClearFrameFromHeadTo(uint16_t *buffer, int ender_index)
 {
 	memset(buffer, 0, sizeof(*buffer) * ender_index);
-	for (int i = 0; i < start_point - ender_index - 1; i++)
+	for (int i = ender_index + 1; i < mybuffer_length; i++)
 	{
-		buffer[i] = buffer[ender_index + i + 1];
+		buffer[i - ender_index - 1] = buffer[i];
 	}
 }
 

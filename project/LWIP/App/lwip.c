@@ -52,6 +52,24 @@ uint8_t GATEWAY_ADDRESS[4];
 
 /* USER CODE BEGIN 2 */
 
+#ifdef LAB_LAN
+
+#define IP_ADDR0 192
+#define IP_ADDR1 168
+#define IP_ADDR2 20
+#define IP_ADDR3 130
+
+#define NETMASK_ADDR0 255
+#define NETMASK_ADDR1 255
+#define NETMASK_ADDR2 255
+#define NETMASK_ADDR3 0
+
+#define GW_ADDR0 192
+#define GW_ADDR1 168
+#define GW_ADDR2 20
+#define GW_ADDR3 254
+#else
+
 #define IP_ADDR0 192
 #define IP_ADDR1 168
 #define IP_ADDR2 20
@@ -67,6 +85,8 @@ uint8_t GATEWAY_ADDRESS[4];
 #define GW_ADDR2 20
 #define GW_ADDR3 254
 
+#endif // LAB_LAN
+
 /* USER CODE END 2 */
 
 /**
@@ -77,17 +97,29 @@ void MX_LWIP_Init(void)
   /* IP addresses initialization */
   IP_ADDRESS[0] = 192;
   IP_ADDRESS[1] = 168;
+  #ifdef LAB_LAN
   IP_ADDRESS[2] = 20;
   IP_ADDRESS[3] = 130;
+  #else
+  IP_ADDRESS[2] = 1;
+  IP_ADDRESS[3] = 130;
+  #endif
+
   NETMASK_ADDRESS[0] = 255;
   NETMASK_ADDRESS[1] = 255;
   NETMASK_ADDRESS[2] = 255;
   NETMASK_ADDRESS[3] = 0;
   GATEWAY_ADDRESS[0] = 192;
   GATEWAY_ADDRESS[1] = 168;
+
+  #ifdef LAB_LAN
   GATEWAY_ADDRESS[2] = 20;
   GATEWAY_ADDRESS[3] = 254;
-
+  #else
+  GATEWAY_ADDRESS[2] = 1;
+  GATEWAY_ADDRESS[3] = 1;
+  #endif
+  
 /* USER CODE BEGIN IP_ADDRESSES */
 /* USER CODE END IP_ADDRESSES */
 
