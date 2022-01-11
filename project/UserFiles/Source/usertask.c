@@ -85,15 +85,15 @@ void ADCHandleTaskFunction(void const *argument)
         					case CALI_ON_5V_SCALE   : RequestCalibration(Gain_2x,  CaliBias);   cali_scale = RMS_ON_5V_SCALE;   RESET_CALI_PENDING; break;
         					case CALI_ON_10V_SCALE  : RequestCalibration(Gain_1x,  CaliBias);   cali_scale = RMS_ON_10V_SCALE;  RESET_CALI_PENDING; break;
 							
-							case APPLY_BIAS_1V		: GlobalConf.offset.bias = safe_buffer[APPLY_BIAS_1V]; 		cali_scale = APPLY_BIAS_1V;		RESET_APPLY_BIAS_PENDING;	break;
-							case APPLY_BIAS_2V		: GlobalConf.offset.bias = safe_buffer[APPLY_BIAS_2V]; 		cali_scale = APPLY_BIAS_2V;		RESET_APPLY_BIAS_PENDING;	break;
-							case APPLY_BIAS_5V		: GlobalConf.offset.bias = safe_buffer[APPLY_BIAS_5V]; 		cali_scale = APPLY_BIAS_5V;		RESET_APPLY_BIAS_PENDING;	break;
-							case APPLY_BIAS_10V		: GlobalConf.offset.bias = safe_buffer[APPLY_BIAS_10V];		cali_scale = APPLY_BIAS_10V;	RESET_APPLY_BIAS_PENDING;	break;
+							case APPLY_BIAS_1V		: GlobalConf.offset[GlobalConf.gain_level].bias = safe_buffer[APPLY_BIAS_1V]; 		cali_scale = APPLY_BIAS_1V;		RESET_APPLY_BIAS_PENDING;	break;
+							case APPLY_BIAS_2V		: GlobalConf.offset[GlobalConf.gain_level].bias = safe_buffer[APPLY_BIAS_2V]; 		cali_scale = APPLY_BIAS_2V;		RESET_APPLY_BIAS_PENDING;	break;
+							case APPLY_BIAS_5V		: GlobalConf.offset[GlobalConf.gain_level].bias = safe_buffer[APPLY_BIAS_5V]; 		cali_scale = APPLY_BIAS_5V;		RESET_APPLY_BIAS_PENDING;	break;
+							case APPLY_BIAS_10V		: GlobalConf.offset[GlobalConf.gain_level].bias = safe_buffer[APPLY_BIAS_10V];		cali_scale = APPLY_BIAS_10V;	RESET_APPLY_BIAS_PENDING;	break;
 
-        					case APPLY_GAIN_1V      : GlobalConf.offset.gain = safe_buffer[APPLY_GAIN_1V];      cali_scale = APPLY_GAIN_1V;     RESET_APPLY_GAIN_PENDING; break;
-        					case APPLY_GAIN_2V      : GlobalConf.offset.gain = safe_buffer[APPLY_GAIN_2V];      cali_scale = APPLY_GAIN_2V;     RESET_APPLY_GAIN_PENDING; break;
-        					case APPLY_GAIN_5V      : GlobalConf.offset.gain = safe_buffer[APPLY_GAIN_5V];      cali_scale = APPLY_GAIN_5V;     RESET_APPLY_GAIN_PENDING; break;
-        					case APPLY_GAIN_10V     : GlobalConf.offset.gain = safe_buffer[APPLY_GAIN_10V];     cali_scale = APPLY_GAIN_10V;    RESET_APPLY_GAIN_PENDING; break;
+        					case APPLY_GAIN_1V      : GlobalConf.offset[GlobalConf.gain_level].gain = safe_buffer[APPLY_GAIN_1V];      cali_scale = APPLY_GAIN_1V;     RESET_APPLY_GAIN_PENDING; break;
+        					case APPLY_GAIN_2V      : GlobalConf.offset[GlobalConf.gain_level].gain = safe_buffer[APPLY_GAIN_2V];      cali_scale = APPLY_GAIN_2V;     RESET_APPLY_GAIN_PENDING; break;
+        					case APPLY_GAIN_5V      : GlobalConf.offset[GlobalConf.gain_level].gain = safe_buffer[APPLY_GAIN_5V];      cali_scale = APPLY_GAIN_5V;     RESET_APPLY_GAIN_PENDING; break;
+        					case APPLY_GAIN_10V     : GlobalConf.offset[GlobalConf.gain_level].gain = safe_buffer[APPLY_GAIN_10V];     cali_scale = APPLY_GAIN_10V;    RESET_APPLY_GAIN_PENDING; break;
                             case END_CALI           : ResetCalibration();safe_buffer_pending[END_CALI] = 0;		cali_scale = END_CALI;			SendEndCali();			break;
         					default:	break;
         				}
@@ -311,11 +311,11 @@ void LwIPHandleTaskFunction(void const *argument)
         //					case CALI_ON_2V_SCALE    : ConfigGain(Gain_5x);   cali_flag = 1; cali_scale = i;  RESET_CALI_PENDING; break;
         //					case CALI_ON_5V_SCALE    : ConfigGain(Gain_2x);   cali_flag = 1; cali_scale = i;  RESET_CALI_PENDING; break;
         //					case CALI_ON_10V_SCALE   : ConfigGain(Gain_1x);   cali_flag = 1; cali_scale = i;  RESET_CALI_PENDING; break;
-        //					case APPLY_BIAS : GlobalConf.offset.bias = safe_buffer[APPLY_BIAS]; RESET_APPLY_BIAS_PENDING; break;
-        //					case APPLY_GAIN_1V       : GlobalConf.offset.gain = safe_buffer[APPLY_BIAS]; RESET_APPLY_GAIN_PENDING; break;
-        //					case APPLY_GAIN_2V       : GlobalConf.offset.gain = safe_buffer[APPLY_BIAS]; RESET_APPLY_GAIN_PENDING; break;
-        //					case APPLY_GAIN_5V       : GlobalConf.offset.gain = safe_buffer[APPLY_BIAS]; RESET_APPLY_GAIN_PENDING; break;
-        //					case APPLY_GAIN_10V      : GlobalConf.offset.gain = safe_buffer[APPLY_BIAS]; RESET_APPLY_GAIN_PENDING; break;
+        //					case APPLY_BIAS : GlobalConf.offset[GlobalConf.gain_level].bias = safe_buffer[APPLY_BIAS]; RESET_APPLY_BIAS_PENDING; break;
+        //					case APPLY_GAIN_1V       : GlobalConf.offset[GlobalConf.gain_level].gain = safe_buffer[APPLY_BIAS]; RESET_APPLY_GAIN_PENDING; break;
+        //					case APPLY_GAIN_2V       : GlobalConf.offset[GlobalConf.gain_level].gain = safe_buffer[APPLY_BIAS]; RESET_APPLY_GAIN_PENDING; break;
+        //					case APPLY_GAIN_5V       : GlobalConf.offset[GlobalConf.gain_level].gain = safe_buffer[APPLY_BIAS]; RESET_APPLY_GAIN_PENDING; break;
+        //					case APPLY_GAIN_10V      : GlobalConf.offset[GlobalConf.gain_level].gain = safe_buffer[APPLY_BIAS]; RESET_APPLY_GAIN_PENDING; break;
         //					default:	break;
         //				}
         //			}

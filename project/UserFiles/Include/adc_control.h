@@ -33,10 +33,11 @@
 #define STALL_SCALE_CRITERIA 2047
 #define WAVE_SLIDE_LENGTH 10
 typedef enum GainLevel_e { 
-    Gain_10x =0x00,
-    Gain_1x  =0x01,
-    Gain_2x  =0x02,
-    Gain_5x  =0x03
+    Gain_10x ,
+    Gain_1x  ,
+    Gain_2x  ,
+    Gain_5x  ,
+    END_OF_GAIN_LEVEL
 } GainLevel_t;
 
 typedef enum SampFreqLvl{
@@ -115,7 +116,7 @@ typedef struct WaveMeasureConfig_s
 {
     uint16_t sampling_freq_kHz;
     GainLevel_t gain_level;
-    AdcOffsetSheet offset;
+    AdcOffsetSheet offset[END_OF_GAIN_LEVEL];
 	uint8_t freq_Autoflag;
 }WaveMeasureConfig_t;
 

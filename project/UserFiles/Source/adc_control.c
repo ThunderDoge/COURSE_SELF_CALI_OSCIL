@@ -304,10 +304,10 @@ float RmS_RawWaveform(uint16_t *pbuffer, uint32_t start_index, uint32_t end_inde
     float result;
 
     uint64_t sum_of_sqr = 0;
-    // int integer_bias = conf->offset.bias * ADC_RANGE / GainLvlToRange(conf->gain_level);
-    int integer_bias = BIAS_TO_INTEGER_BIAS((conf->offset.bias), (conf->gain_level));
-    // float gain = (1.0f + conf->offset.gain) * GainLvlToRange(conf->gain_level) / ADC_RANGE;
-    float gain = FACTOR_SAMP_VAL_TO_VOLT((conf->gain_level), (conf->offset.gain));
+    // int integer_bias = conf->offset[conf->gain_level].bias * ADC_RANGE / GainLvlToRange(conf->gain_level);
+    int integer_bias = BIAS_TO_INTEGER_BIAS((conf->offset[conf->gain_level].bias), (conf->gain_level));
+    // float gain = (1.0f + conf->offset[conf->gain_level].gain) * GainLvlToRange(conf->gain_level) / ADC_RANGE;
+    float gain = FACTOR_SAMP_VAL_TO_VOLT((conf->gain_level), (conf->offset[conf->gain_level].gain));
 
     // get sum of squares (bias substracted)
     for (size_t i = start_index; i <= end_index; i++)
@@ -336,10 +336,10 @@ float Average_RawWaveformRawWaveform(uint16_t *pbuffer, uint32_t start_index, ui
 {
     float result;
 
-    // int integer_bias = conf->offset.bias * ADC_RANGE / GainLvlToRange(conf->gain_level);
-    int integer_bias = BIAS_TO_INTEGER_BIAS((conf->offset.bias), (conf->gain_level));
-    // float gain = (1.0f + conf->offset.gain) * GainLvlToRange(conf->gain_level) / ADC_RANGE;
-    float gain = FACTOR_SAMP_VAL_TO_VOLT((conf->gain_level), (conf->offset.gain));
+    // int integer_bias = conf->offset[conf->gain_level].bias * ADC_RANGE / GainLvlToRange(conf->gain_level);
+    int integer_bias = BIAS_TO_INTEGER_BIAS((conf->offset[conf->gain_level].bias), (conf->gain_level));
+    // float gain = (1.0f + conf->offset[conf->gain_level].gain) * GainLvlToRange(conf->gain_level) / ADC_RANGE;
+    float gain = FACTOR_SAMP_VAL_TO_VOLT((conf->gain_level), (conf->offset[conf->gain_level].gain));
 
     long long sum = 0;
 
@@ -490,8 +490,8 @@ void WaveformDataAnalyze(uint16_t *pbuffer, uint32_t buf_length, WaveformStats *
 
     // statistics.
 
-    // int integer_bias = config->offset.bias * ADC_RANGE / GainLvlToRange(conf->gain_level);
-    //    float gain = (1.0f + config->offset.gain) * GainLvlToRange[(uint32_t)config->gain_level];
+    // int integer_bias = config->offset[config->gain_level].bias * ADC_RANGE / GainLvlToRange(conf->gain_level);
+    //    float gain = (1.0f + config->offset[config->gain_level].gain) * GainLvlToRange[(uint32_t)config->gain_level];
 
     // WARNING: the compiler MAY interpreter '*' in '* GainLvlToRange[config->gain_level]' into 'unpointerlize' rather than 'multiplate'.
     // so I have to do this to avoid ambiguousness.
@@ -499,18 +499,18 @@ void WaveformDataAnalyze(uint16_t *pbuffer, uint32_t buf_length, WaveformStats *
 
     /*
     float scale = (float)GainLvlToRange[(uint32_t)config->gain_level];
-    float gain_offset = (1.0f + config->offset.gain);
+    float gain_offset = (1.0f + config->offset[config->gain_level].gain);
 
     wave->maximum = (sampled_max - 2047 - integer_bias) * scale * gain_offset / 4096.0f;
-    //    wave->minimum = (float)(sampled_min - 2047 - integer_bias) * GainLvlToRange[(uint32_t)config->gain_level] * (1.0f + config->offset.gain) / 4096.0f;
+    //    wave->minimum = (float)(sampled_min - 2047 - integer_bias) * GainLvlToRange[(uint32_t)config->gain_level] * (1.0f + config->offset[config->gain_level].gain) / 4096.0f;
     wave->minimum = (sampled_min - 2047 - integer_bias) * scale * gain_offset / 4096.0f;
 
 
     //BIG wave form statistics:
 
     */
-    wave->maximum = (sampled_max - BIAS_TO_INTEGER_BIAS((config->offset.bias),(config->gain_level)) - ADC_MID ) * FACTOR_SAMP_VAL_TO_VOLT((config->gain_level),(config->offset.gain));
-    wave->minimum = (sampled_min - BIAS_TO_INTEGER_BIAS((config->offset.bias),(config->gain_level)) - ADC_MID) * FACTOR_SAMP_VAL_TO_VOLT((config->gain_level),(config->offset.gain));
+    wave->maximum = (sampled_max - BIAS_TO_INTEGER_BIAS((config->offset[config->gain_level].bias),(config->gain_level)) - ADC_MID ) * FACTOR_SAMP_VAL_TO_VOLT((config->gain_level),(config->offset[config->gain_level].gain));
+    wave->minimum = (sampled_min - BIAS_TO_INTEGER_BIAS((config->offset[config->gain_level].bias),(config->gain_level)) - ADC_MID) * FACTOR_SAMP_VAL_TO_VOLT((config->gain_level),(config->offset[config->gain_level].gain));
    
     if (first_edging_index == -1 || last_edging_index == -1)
     {
@@ -680,13 +680,13 @@ int GetCalibration(void)
     {
         if (global_cali_type == CaliGain)
         {
-            GlobalConf.offset.gain = wave_buffer.output.RmS / WAVE_SLIDE_LENGTH;
+            GlobalConf.offset[GlobalConf.gain_level].gain = wave_buffer.output.RmS / WAVE_SLIDE_LENGTH;
             ResetCalibration();
             return 1;
         }
         if (global_cali_type == CaliBias)
         {
-            GlobalConf.offset.bias = wave_buffer.output.average / WAVE_SLIDE_LENGTH;
+            GlobalConf.offset[GlobalConf.gain_level].bias = wave_buffer.output.average / WAVE_SLIDE_LENGTH;
             ResetCalibration();
             return 1;
         }
