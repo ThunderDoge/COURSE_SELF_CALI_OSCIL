@@ -16,3 +16,4 @@
 *.lst
 *.zore
 /doc/*.docx
+/project/MDK-ARM/COURSE_SELF_CALI_OSCIL/*.axf

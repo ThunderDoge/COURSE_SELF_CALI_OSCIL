@@ -34,12 +34,20 @@
         safe_buffer_pending[APPLY_GAIN_10V] = 0; \
     }
 
-const int DEBUG_FLAG = 1;
+int DEBUG_FLAG = 0;
 
 ONE_PARAMETER_TO_SEND temp_frame;
 uint8_t cali_flag = 0;
 enum TypesOfFrame cali_scale = RMS_ON_10V_SCALE;
 uint16_t temp_buf[(sizeof(DATA_POINTS_TO_SEND) + sizeof(ONE_PARAMETER_TO_SEND))/sizeof(uint16_t)];
+
+	
+// Short funtion. force to send a END_CALI frame.
+void SendEndCali(void)
+{
+	LoadStruct(&temp_frame, END_CALI, GlobalWave.RmS);
+	ETH_SendData(sizeof(temp_frame) / 2, &temp_frame, 0);
+}
 
 /**
 * @brief Function implementing the ADCHandleTask thread.
@@ -82,11 +90,11 @@ void ADCHandleTaskFunction(void const *argument)
 							case APPLY_BIAS_5V		: GlobalConf.offset.bias = safe_buffer[APPLY_BIAS_5V]; 		cali_scale = APPLY_BIAS_5V;		RESET_APPLY_BIAS_PENDING;	break;
 							case APPLY_BIAS_10V		: GlobalConf.offset.bias = safe_buffer[APPLY_BIAS_10V];		cali_scale = APPLY_BIAS_10V;	RESET_APPLY_BIAS_PENDING;	break;
 
-        					case APPLY_GAIN_1V      : GlobalConf.offset.gain = safe_buffer[APPLY_GAIN_1V];      cali_scale = APPLY_GAIN_1V;    RESET_APPLY_GAIN_PENDING; break;
-        					case APPLY_GAIN_2V      : GlobalConf.offset.gain = safe_buffer[APPLY_GAIN_2V];      cali_scale = APPLY_GAIN_2V;    RESET_APPLY_GAIN_PENDING; break;
-        					case APPLY_GAIN_5V      : GlobalConf.offset.gain = safe_buffer[APPLY_GAIN_5V];      cali_scale = APPLY_GAIN_5V;    RESET_APPLY_GAIN_PENDING; break;
-        					case APPLY_GAIN_10V     : GlobalConf.offset.gain = safe_buffer[APPLY_GAIN_10V];     cali_scale = APPLY_GAIN_10V;   RESET_APPLY_GAIN_PENDING; break;
-                            case END_CALI           : ResetCalibration();safe_buffer_pending[END_CALI] = 0; break;
+        					case APPLY_GAIN_1V      : GlobalConf.offset.gain = safe_buffer[APPLY_GAIN_1V];      cali_scale = APPLY_GAIN_1V;     RESET_APPLY_GAIN_PENDING; break;
+        					case APPLY_GAIN_2V      : GlobalConf.offset.gain = safe_buffer[APPLY_GAIN_2V];      cali_scale = APPLY_GAIN_2V;     RESET_APPLY_GAIN_PENDING; break;
+        					case APPLY_GAIN_5V      : GlobalConf.offset.gain = safe_buffer[APPLY_GAIN_5V];      cali_scale = APPLY_GAIN_5V;     RESET_APPLY_GAIN_PENDING; break;
+        					case APPLY_GAIN_10V     : GlobalConf.offset.gain = safe_buffer[APPLY_GAIN_10V];     cali_scale = APPLY_GAIN_10V;    RESET_APPLY_GAIN_PENDING; break;
+                            case END_CALI           : ResetCalibration();safe_buffer_pending[END_CALI] = 0;		cali_scale = END_CALI;			SendEndCali();			break;
         					default:	break;
         				}
         			}
@@ -155,7 +163,7 @@ void ADCHandleTaskFunction(void const *argument)
                             }
                             else
                             {
-                                memcpy(&(dptr->data), adc_buffer_0, DATA_POINTS_LEN * sizeof(uint16_t));
+                                memcpy(&(dptr->data), (void *)(adc_buffer_0 + Intro_Size) , DATA_POINTS_LEN * sizeof(uint16_t));
                             }
 
                             // Load parameter.
@@ -201,7 +209,7 @@ void ADCHandleTaskFunction(void const *argument)
                             }
                             else
                             {
-                                memcpy(&(dptr->data), adc_buffer_0, DATA_POINTS_LEN * sizeof(uint16_t));
+                                memcpy(&(dptr->data), (void *)(adc_buffer_1 + Intro_Size), DATA_POINTS_LEN * sizeof(uint16_t));
                             }
 
                             // Load parameter.

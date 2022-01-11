@@ -53,7 +53,7 @@
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>0</CreateHexFile>
-          <DebugInformation>0</DebugInformation>
+          <DebugInformation>1</DebugInformation>
           <BrowseInformation>0</BrowseInformation>
           <ListingPath></ListingPath>
           <HexFormatSelection>1</HexFormatSelection>
@@ -312,7 +312,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>4</Optim>
+            <Optim>1</Optim>
             <oTime>1</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -336,7 +336,7 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>USE_HAL_DRIVER,STM32F407xx,UNUSE_LWIP</Define>
+              <Define>USE_HAL_DRIVER,STM32F407xx,UNUSE_LWIP,LAB_LAN</Define>
               <Undefine></Undefine>
               <IncludePath>../Core/Inc;                ../Drivers/STM32F4xx_HAL_Driver/Inc;                ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;                ../Middlewares/Third_Party/FreeRTOS/Source/include;                ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;                ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;                ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;                ../Drivers/CMSIS/Include;                ..\UserFiles\Include;                ..\UserFiles\SystemView\Config;                ..\UserFiles\SystemView\Sample\FreeRTOSV10;                ..\UserFiles\SystemView\SEGGER;            ../LWIP/App;            ../LWIP/Target;            ../Middlewares/Third_Party/LwIP/src/include;            ../Middlewares/Third_Party/LwIP/system;            ../Middlewares/Third_Party/LwIP/src/include/netif/ppp;            ../Middlewares/Third_Party/LwIP/src/include/lwip;            ../Middlewares/Third_Party/LwIP/src/include/lwip/apps;            ../Middlewares/Third_Party/LwIP/src/include/lwip/priv;            ../Middlewares/Third_Party/LwIP/src/include/lwip/prot;            ../Middlewares/Third_Party/LwIP/src/include/netif;            ../Middlewares/Third_Party/LwIP/src/include/compat/posix;            ../Middlewares/Third_Party/LwIP/src/include/compat/posix/arpa;            ../Middlewares/Third_Party/LwIP/src/include/compat/posix/net;            ../Middlewares/Third_Party/LwIP/src/include/compat/posix/sys;            ../Middlewares/Third_Party/LwIP/src/include/compat/stdc;            ../Middlewares/Third_Party/LwIP/system/arch</IncludePath>
             </VariousControls>
