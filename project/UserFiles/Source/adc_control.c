@@ -6,7 +6,7 @@
 uint32_t buffer_blocked_count = 0;
 
 int watch1;
-int watch2;
+float watch2;
 
 
 // Global config & statistic storage.
@@ -69,7 +69,7 @@ int BIAS_TO_INTEGER_BIAS(float bias_volt, GainLevel_t gain_lvl)
 
 float FACTOR_SAMP_VAL_TO_VOLT(GainLevel_t gain_lvl,float gain_offset)
 {
-    return GainLvlToRange(gain_lvl) / ADC_HALF_RANGE * (1.0f + gain_offset);
+    return GainLvlToRange(gain_lvl) / (ADC_HALF_RANGE * (1.0f + gain_offset) );
 }
 
 
@@ -314,8 +314,6 @@ float RmS_RawWaveform(uint16_t *pbuffer, uint32_t start_index, uint32_t end_inde
     {
         int v = pbuffer[i] - ADC_MID - integer_bias;
         sum_of_sqr += v * v;
-        watch1 = sum_of_sqr;
-        watch2 = v;
     }
 
     int cnt = end_index - start_index;
@@ -362,6 +360,8 @@ float Average_RawWaveformRawWaveform(uint16_t *pbuffer, uint32_t start_index, ui
 
 int sampled_max;
 int sampled_min;
+uint32_t dots_per_edges;
+
 
 /**
  * @brief  Analyze the waveform and write statistic to the stucture;
@@ -383,59 +383,57 @@ void WaveformDataAnalyze(uint16_t *pbuffer, uint32_t buf_length, WaveformStats *
     }
 
     // now measure frequncy.
-//    uint16_t trig_voltage = (sampled_max + sampled_min) / 2; // set the trigger volt at middle.
+   uint16_t trig_voltage = (sampled_max + sampled_min) / 2; // set the trigger volt at middle.
 
-//    uint16_t is_cnt_risedge = 1; // here to select u wanna rising-edge or falling-edge.
+   uint16_t is_cnt_risedge = 1; // here to select u wanna rising-edge or falling-edge.
 
-//    uint32_t cnt_of_risedge = 0;
+   uint32_t cnt_of_risedge = 0;
 
     int first_edging_index = -1;
     int last_edging_index = -1;
 
     // count of trigger-volt crossing.
     // and record FIRST & LAST crossing index.
-//    for (uint32_t i = 3; i < buf_length - 1; i++) // left off: pbuffer[buf_length-1], the last data point.
-//    {
+   for (uint32_t i = 3; i < buf_length - 1; i++) // left off: pbuffer[buf_length-1], the last data point.
+   {
 
-//        if (is_cnt_risedge)
-//        {
-//            if (pbuffer[i] <= trig_voltage && pbuffer[i + 1] > trig_voltage) // detect risedge
-//            {
-//                cnt_of_risedge++;
-//                if (first_edging_index == -1)
-//                {
-//                    first_edging_index = i;
-//                }
+       if (is_cnt_risedge)
+       {
+           if (pbuffer[i] <= trig_voltage && pbuffer[i + 1] > trig_voltage) // detect risedge
+           {
+               cnt_of_risedge++;
+               if (first_edging_index == -1)
+               {
+                   first_edging_index = i;
+               }
 
-//                last_edging_index = i;
-//            }
-//        }
-//        else
-//        {
-//            if (pbuffer[i] >= trig_voltage && pbuffer[i + 1] < trig_voltage) // detect falledge
-//            {
-//                cnt_of_risedge++;
-//                // record edging index
-//                if (first_edging_index == -1)
-//                {
-//                    first_edging_index = i;
-//                }
+               last_edging_index = i;
+           }
+       }
+       else
+       {
+           if (pbuffer[i] >= trig_voltage && pbuffer[i + 1] < trig_voltage) // detect falledge
+           {
+               cnt_of_risedge++;
+               // record edging index
+               if (first_edging_index == -1)
+               {
+                   first_edging_index = i;
+               }
 
-//                last_edging_index = i;
-//            }
-//        }
-//    }
+               last_edging_index = i;
+           }
+       }
+   }
 
-//    // register edges.
-//    if (cnt_of_risedge == 0)
-//        cnt_of_risedge = 1;
+   // register edges.
+   if (cnt_of_risedge == 0)
+       cnt_of_risedge = 1;
 
-//    uint32_t dots_per_edges;
-
-//    if (first_edging_index != -1 && last_edging_index != -1)
-//        dots_per_edges = (last_edging_index - first_edging_index) / cnt_of_risedge;
-//    else
-//        dots_per_edges = 0XFFFF;
+   if (first_edging_index != -1 && last_edging_index != -1)
+       dots_per_edges = (last_edging_index - first_edging_index) / cnt_of_risedge;
+   else
+       dots_per_edges = 0XFFFF;
 
     // data validation - evaluation condition ->
 
@@ -466,7 +464,10 @@ void WaveformDataAnalyze(uint16_t *pbuffer, uint32_t buf_length, WaveformStats *
 
     // statistics.
 
-//    wave->edges = cnt_of_risedge;
+   wave->edges = cnt_of_risedge;
+
+    // software frequncy measure. now aborted.
+
 //    if (cnt_of_risedge <= 2)
 //    {
 //        wave->freq = 0;
@@ -512,9 +513,13 @@ void WaveformDataAnalyze(uint16_t *pbuffer, uint32_t buf_length, WaveformStats *
     wave->maximum = (sampled_max - BIAS_TO_INTEGER_BIAS((config->offset[config->gain_level].bias),(config->gain_level)) - ADC_MID ) * FACTOR_SAMP_VAL_TO_VOLT((config->gain_level),(config->offset[config->gain_level].gain));
     wave->minimum = (sampled_min - BIAS_TO_INTEGER_BIAS((config->offset[config->gain_level].bias),(config->gain_level)) - ADC_MID) * FACTOR_SAMP_VAL_TO_VOLT((config->gain_level),(config->offset[config->gain_level].gain));
    
-    if (first_edging_index == -1 || last_edging_index == -1)
+    if (first_edging_index == -1)
     {
         first_edging_index = 0;
+    }
+
+    if(last_edging_index == -1)
+    {
         last_edging_index = buf_length - 1;
     }
 
@@ -681,13 +686,13 @@ int GetCalibration(void)
     {
         if (global_cali_type == CaliGain)
         {
-            GlobalConf.offset[GlobalConf.gain_level].gain = ((GainLvlToRange(GlobalConf.gain_level) * 0.5) / GlobalWave.RmS) -1 ;
+            GlobalConf.offset[GlobalConf.gain_level].gain += (GlobalWave.RmS / (GainLvlToRange(GlobalConf.gain_level) * 0.5 ) ) -1 ;
             ResetCalibration();
             return 1;
         }
         if (global_cali_type == CaliBias)
         {
-            GlobalConf.offset[GlobalConf.gain_level].bias = GlobalWave.average;
+            GlobalConf.offset[GlobalConf.gain_level].bias += GlobalWave.average;
             ResetCalibration();
             return 1;
         }
