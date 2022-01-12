@@ -313,6 +313,7 @@ void LcdCalibrationDC(void)
         case KEY_1_PRES:
             // ------------------------------------------------------ APPLY YOUR CONFIG HERE
             RequestCalibration(GlobalConf.gain_level, CaliBias);
+            manual_cali_flag = 1;
             LCD_ShowString(150, 400, 200, 16, 16, "REQUESTED");
             break;
         case KEY_UP_PRES:

@@ -151,6 +151,7 @@ extern uint8_t flag_adc_buffer_ready[2];
 extern uint8_t flag_adc_buffer_processing[2];
 extern uint8_t flag_adc_sampling;
 extern uint8_t flag_in_calibration;
+extern int manual_cali_flag;
 
 
 extern uint16_t adc_buffer_0[ADC_BUFFER_SIZE + Intro_Size];

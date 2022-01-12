@@ -619,6 +619,7 @@ void InitializeWaveformSlidingBuffer(WaveformSlidingBuffer *buffer)
 
 uint8_t flag_in_calibration=0;
 CaliType global_cali_type = CaliNone;
+int manual_cali_flag=0;
 /**
  * @brief  Request a new calibration.
  * @details  
@@ -671,7 +672,7 @@ int FeedCalibration(WaveformStats * wave, WaveformSlidingBuffer * buffer)
 
 /**
  * @brief  Get calibration data to GlobalConf the global configuration.
- * @details  
+ * @details  U shall turn to Half of Full scale to calibration.
  * @retval  
  */
 int GetCalibration(void)
@@ -680,13 +681,13 @@ int GetCalibration(void)
     {
         if (global_cali_type == CaliGain)
         {
-            GlobalConf.offset[GlobalConf.gain_level].gain = wave_buffer.output.RmS / WAVE_SLIDE_LENGTH;
+            GlobalConf.offset[GlobalConf.gain_level].gain = ((GainLvlToRange(GlobalConf.gain_level) * 0.5) / GlobalWave.RmS) -1 ;
             ResetCalibration();
             return 1;
         }
         if (global_cali_type == CaliBias)
         {
-            GlobalConf.offset[GlobalConf.gain_level].bias = wave_buffer.output.average / WAVE_SLIDE_LENGTH;
+            GlobalConf.offset[GlobalConf.gain_level].bias = GlobalWave.average;
             ResetCalibration();
             return 1;
         }
@@ -700,6 +701,6 @@ void ResetCalibration(void)
 {
     flag_in_calibration=0;
     global_cali_type = CaliNone;
-    InitializeWaveformSlidingBuffer(&wave_buffer);
+    // InitializeWaveformSlidingBuffer(&wave_buffer);
 }
 

@@ -182,6 +182,11 @@ void ADCHandleTaskFunction(void const *argument)
                             LoadStruct(&temp_frame, cali_scale, GlobalWave.RmS);
                             ETH_SendData(sizeof(temp_frame) / 2, &temp_frame, 0);
                         }
+                        if(manual_cali_flag)
+                        {
+                            GetCalibration();
+                            manual_cali_flag = 0;
+                        }
                     }
                 }
                 else
@@ -228,23 +233,13 @@ void ADCHandleTaskFunction(void const *argument)
                             LoadStruct(&temp_frame, cali_scale, GlobalWave.RmS);
                             ETH_SendData(sizeof(temp_frame) / 2, &temp_frame, 0);
                         }
+                        if(manual_cali_flag)
+                        {
+                            GetCalibration();
+                            manual_cali_flag = 0;
+                        }
                     }
                 }
-                //                if(flag_in_calibration)
-                //                {
-                //                    if(FeedCalibration(&TempWave, &wave_buffer))
-                //                    {
-                //                        GetCalibration();
-                //                    }
-                //                }
-                //                else
-                // {
-                //     if (FeedRegularSlidingBuffer(&TempWave, &wave_buffer))
-                //     {
-                //         GetRegularSlidingOutput(&GlobalWave, &wave_buffer);
-                //     }
-                // }
-
                 flag_adc_buffer_processing[i] = 0;
                 flag_adc_buffer_ready[i] = 0;
                 // Every 5ms :
